@@ -1,7 +1,9 @@
 #include <math.h>
+#include <algorithm>
 
 #ifndef __GEOFUN_H
 #define __GEOFUN_H
+
 
 namespace geofun {
 
@@ -53,6 +55,7 @@ inline double norm_angle_2pi(const double angle)
 inline bool norm_angle_pi2pi2(double* angle)
 {
   *angle = norm_angle_pipi(*angle);
+
   if (*angle > half_pi) {
     *angle = pi - *angle;
     return true;
@@ -109,41 +112,53 @@ struct Coord {
   double y() const {
     return _y;
   }
+  void set_x(const double value) {
+    _x = value;
+  }
+  void set_y(const double value) {
+    _y = value;
+  }
 private:
   double _x;
   double _y;
 };
 
-inline Coord operator+(const Coord& value1, const Coord& value2) 
+inline Coord operator+(const Coord& coord1, const Coord& coord2) 
 {
-  Coord c = value1;
-  c += value2;
+  Coord c = coord1;
+  c += coord2;
   return c;
 }
 
-inline Coord operator-(const Coord& value1, const Coord& value2) 
+inline Coord operator-(const Coord& coord1, const Coord& coord2) 
 {
-  Coord c = value1;
-  c -= value2;
+  Coord c = coord1;
+  c -= coord2;
   return c;
 }
 
-inline Coord operator*(const Coord& value1, const double value2) 
+inline Coord operator*(const Coord& coord, const double value) 
 {
-  Coord c = value1;
-  c *= value2;
+  Coord c = coord;
+  c *= value;
   return c;
 }
 
-inline Coord operator*(const double value1, const Coord& value2) 
+inline Coord operator*(const double value, const Coord& coord) 
 {
-  Coord c = value2;
-  c *= value1;
+  Coord c = coord;
+  c *= value;
   return c;
+}
+
+inline Coord operator/(const double value, const Coord& coord)
+{
+  return Coord(value / coord.x(), value / coord.y());
 }
 
 
 struct Vector {
+  Vector(): _a(0), _r(0) {}
   Vector(const double angle, const double range): _a(angle), _r(range) {}
   Vector(const Vector& vector): _a(vector._a), _r(vector._r) {}
   Vector(const Coord& coord) {
@@ -155,6 +170,11 @@ struct Vector {
     _a = vector._a;
     _r = vector._r;
     return *this;
+  }
+  Vector operator-() {
+    Vector v(*this);
+    v._r = norm_angle_2pi(_r + pi);
+    return v;
   }
   Vector& operator*=(const double value) {
     _r *= value;
@@ -177,7 +197,7 @@ struct Vector {
     return _r;
   }
   void set_a(const double value) {
-    _a = value;
+    _a = norm_angle_2pi(value);
   }
   void set_r(const double value) {
     _r = value;
@@ -187,23 +207,25 @@ private:
   double _r;
 };
 
-inline Vector operator*(const Vector& value1, const double value2)
+inline Vector operator*(const Vector& vector1, const double vector2)
 {
-  Vector result = value1;
-  result *= value2;
+  Vector result = vector1;
+  result *= vector2;
   return result;
 }
 
-inline Vector operator*(const double value1, const Vector& value2)
+inline Vector operator*(const double value, const Vector& vector)
 {
-  Vector result = value2;
-  result *= value1;
+  Vector result = vector;
+  result *= value;
   return result;
 }
 
 struct Position {
   Position(): _lat(0), _lon(0) {}
-  Position(const double latitude, const double longitude): _lat(latitude), _lon(longitude) {}
+  Position(const double latitude, const double longitude): _lat(0), _lon(0) {
+    set_latlon(latitude, longitude);
+  }
   Position(const Position& position): _lat(position._lat), _lon(position._lon) {}
   Position& operator=(const Position& position) { 
     _lat = position._lat;
@@ -251,6 +273,66 @@ private:
 };
 
 Vector operator-(const Position& position1, const Position& position2);
+inline Position operator+(const Position& position, const Vector& vector) 
+{
+  Position result(position);
+  result += vector;
+  return result;
+}
+
+struct Line {
+  Line(): _p1(), _p2(), _v() {}
+  Line(const Line& line): _p1(line._p1), _p2(line._p2), _v(line._v) {}
+  Line(const Position& position1, const Position& position2):
+    _p1(position1), _p2(position2), _v(position2 - position1) {}
+  Line(const Position& position, const Vector& vector):
+    _p1(position), _p2(position + vector), _v(_p2 - position) {}
+  Line& operator=(const Line& line) {
+    _p1 = line._p1;
+    _p2 = line._p2;
+    _v = line._v;
+  }
+  const Position& p1() const {
+    return _p1;
+  }
+  const Position& p2() const {
+    return _p2;
+  }
+  const Vector& v() const {
+    return _v;
+  }
+  void set_p1(const Position& position) {
+    _p1 = position;
+    _v = _p2 - _p1;
+  }
+  void set_p2(const Position& position) {
+    _p2 = position;
+    _v = _p2 - _p1;
+  }
+  void set_v(const Vector& vector) {
+    _p2 = _p1 + vector;
+    // v will not be set exactly...
+    _v = _p2 - _p1;
+  }
+  double min_lat() const {
+    std::min(_p1.lat(), _p2.lat());
+  }
+  double max_lat() const {
+    std::max(_p1.lat(), _p2.lat());
+  }
+  double min_lon() const {
+    std::min(_p1.lon(), _p1.lon());
+  }
+  double max_lon() const {
+    std::max(_p1.lon(), _p2.lon());
+  }
+  bool intersects(const Line& line) const;
+  Position intersection(const Line& line) const;
+private:
+  Position _p1;
+  Position _p2;
+  Vector _v;
+};
 
 };  // namespace geofun
 
