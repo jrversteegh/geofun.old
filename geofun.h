@@ -334,6 +334,49 @@ private:
   Vector _v;
 };
 
+struct Arc {
+  Arc(): _p1(), _p2(), _v(), _r() {}
+  Arc(const Arc& arc) _p1(arc._p1), _p2(arc._p2), _v(arc._v), _r(arc._r) {}
+  Arc& operator=(const Arc& arc) {
+    _p1 = arc._p1;
+    _p2 = arc._p2;
+    _v = arc._v;
+    _r = arc._r;
+  }
+  Arc& operator+=(const Vector& vector) {
+    // TODO Vicenty direct method
+  }
+  const Position& p1() const {
+    return _p1;
+  }
+  const Position& p2() const {
+    return _p2;
+  }
+  const Vector& v() const {
+    return _v;
+  }
+  const Vector& r() const {
+    return _r;
+  }
+  void set_p1(const Position& position) {
+    // TODO Vicenty inverse method
+  }
+  void set_p2(const Position& position) {
+    // TODO Vicenty inverse method
+  }
+  void set_v(const Vector& vector) {
+    // TODO Vicenty direct method
+  }
+  void set_r(const Vector& vector) {
+    // TODO Vicenty direct method
+  }
+private:
+  Position _p1;
+  Position _p2;
+  Vector _v;
+  Vector _r;
+};
+
 };  // namespace geofun
 
 #endif // __GEOFUN_H
