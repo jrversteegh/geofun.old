@@ -13,8 +13,8 @@ static const double f = (a - b) / a; // Earth ellipsoid flattening
 static const double pi = 3.14159265358979323846;
 static const double two_pi = 2 * pi;
 static const double half_pi = 0.5 * pi;
-static const double sqra = a * a;
-static const double sqrb = b * b;
+static const double sqa = a * a;
+static const double sqb = b * b;
 
 
 
@@ -263,8 +263,8 @@ struct Position {
   Coord cartesian_deltas(void) const {
     double rl = reduced_latitude(lat());
     return Coord(
-        a * b * sqrt(sqra * sqr(sin(rl)) + sqrb * sqr(cos(rl))) 
-            / ((sqra - sqrb) * sqr(cos(lat())) + sqrb),
+        a * b * sqrt(sqa * sqr(sin(rl)) + sqb * sqr(cos(rl))) 
+            / ((sqa - sqb) * sqr(cos(lat())) + sqb),
         a * cos(rl));
   }
 private:
@@ -336,7 +336,7 @@ private:
 
 struct Arc {
   Arc(): _p1(), _p2(), _v(), _r() {}
-  Arc(const Arc& arc) _p1(arc._p1), _p2(arc._p2), _v(arc._v), _r(arc._r) {}
+  Arc(const Arc& arc): _p1(arc._p1), _p2(arc._p2), _v(arc._v), _r(arc._r) {}
   Arc& operator=(const Arc& arc) {
     _p1 = arc._p1;
     _p2 = arc._p2;
@@ -344,7 +344,13 @@ struct Arc {
     _r = arc._r;
   }
   Arc& operator+=(const Vector& vector) {
-    // TODO Vicenty direct method
+    Position p2;
+    Vector r;
+    vincenty_direct(_p2, vector, &p2, &r);
+    _p2 = p2;
+    _v.set_r(_v.r() + vector.r());
+    _r.set_r(_r.r() + vector.r());
+    _r.set_a(r.a());
   }
   const Position& p1() const {
     return _p1;
@@ -359,17 +365,24 @@ struct Arc {
     return _r;
   }
   void set_p1(const Position& position) {
-    // TODO Vicenty inverse method
+    _p1 = position;
+    vincenty_inverse(_p1, _p2, &_v, &_r);
   }
   void set_p2(const Position& position) {
-    // TODO Vicenty inverse method
+    _p2 = position;
+    vincenty_inverse(_p1, _p2, &_v, &_r);
   }
   void set_v(const Vector& vector) {
-    // TODO Vicenty direct method
+    _v = vector;
+    vincenty_direct(_p1, vector, &_p2, &_r);
   }
   void set_r(const Vector& vector) {
-    // TODO Vicenty direct method
+    _r = vector;
+    vincenty_direct(_p2, vector, &_p1, &_v);
   }
+protected:
+  void vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Vector* r);
+  void vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vector* r);
 private:
   Position _p1;
   Position _p2;
