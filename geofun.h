@@ -4,9 +4,6 @@
 #include <math.h>
 #include <algorithm>
 #include <assert.h>
-#include <iostream>
-
-using namespace std;
 
 namespace geofun {
 
@@ -348,10 +345,10 @@ private:
 struct Arc {
   Arc(): _p1(), _p2(), _v(), _r() {}
   Arc(const Position& p1, const Position& p2): _p1(p1), _p2(p2) {
-    vincenty_inverse(p1, p2, &_v, &_r);
+    vincenty_inverse(p1, p2, &_v, &_r, &_alpha);
   }
   Arc(const Position& p1, const Vector& v): _p1(p1), _v(v) {
-    vincenty_direct(p1, v, &_p2, &_r);
+    vincenty_direct(p1, v, &_p2, &_r, &_alpha);
   }
   Arc(const Arc& arc): _p1(arc._p1), _p2(arc._p2), _v(arc._v), _r(arc._r) {}
   Arc& operator=(const Arc& arc) {
@@ -363,11 +360,9 @@ struct Arc {
   Arc& operator+=(const Vector& vector) {
     Position p2;
     Vector r;
-    vincenty_direct(_p2, vector, &p2, &r);
-    _p2 = p2;
-    _v.set_r(_v.r() + vector.r());
-    _r.set_r(_r.r() + vector.r());
-    _r.set_a(r.a());
+    double alpha;
+    vincenty_direct(_p2, vector, &p2, &r, &alpha);
+    set_p2(p2);
   }
   const Position& p1() const {
     return _p1;
@@ -383,28 +378,45 @@ struct Arc {
   }
   void set_p1(const Position& position) {
     _p1 = position;
-    vincenty_inverse(_p1, _p2, &_v, &_r);
+    vincenty_inverse(_p1, _p2, &_v, &_r, &_alpha);
   }
   void set_p2(const Position& position) {
     _p2 = position;
-    vincenty_inverse(_p1, _p2, &_v, &_r);
+    vincenty_inverse(_p1, _p2, &_v, &_r, &_alpha);
   }
   void set_v(const Vector& vector) {
     _v = vector;
-    vincenty_direct(_p1, vector, &_p2, &_r);
+    vincenty_direct(_p1, vector, &_p2, &_r, &_alpha);
   }
   void set_r(const Vector& vector) {
     _r = vector;
-    vincenty_direct(_p2, vector, &_p1, &_v);
+    vincenty_direct(_p2, vector, &_p1, &_v, &_alpha);
   }
+  double min_lat() const {
+    //std::min(_p1.lat(), _p2.lat());
+  }
+  double max_lat() const {
+    //std::max(_p1.lat(), _p2.lat());
+  }
+  double min_lon() const {
+    std::min(_p1.lon(), _p1.lon());
+  }
+  double max_lon() const {
+    std::max(_p1.lon(), _p2.lon());
+  }
+  bool intersects(const Line& line) const;
+  Position intersection(const Line& line) const;
+  bool intersects(const Arc& arc) const;
+  Position intersection(const Arc& arc) const;
 protected:
-  void vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Vector* r);
-  void vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vector* r);
+  static void vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Vector* r, double* alpha);
+  static void vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vector* r, double* alpha);
 private:
   Position _p1;
   Position _p2;
-  Vector _v;
-  Vector _r;
+  Vector _v;     // forward vector
+  Vector _r;     // reverse vector
+  double _alpha; // azimuth at equator
 };
 
 };  // namespace geofun

@@ -88,7 +88,7 @@ Position Line::intersection(const Line& line) const {
   return p;
 }
 
-void Arc::vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Vector* r)
+void Arc::vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Vector* r, double* alpha)
 {
   // Formula obtained from http://en.wikipedia.org/wiki/Vincenty%27s_formulae
   double u1 = reduced_latitude(p1.lat());
@@ -146,9 +146,10 @@ void Arc::vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Ve
   r->set_r(v->r());
   v->set_a(atan2(cosu2 * sindl, cosu1sinu2 - sinu1cosu2 * cosdl));
   r->set_a(pi - atan2(cosu1 * sindl, -sinu1cosu2 + cosu1sinu2 * cosdl));
+  *alpha = asin(sina);
 }
 
-void Arc::vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vector* r)
+void Arc::vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vector* r, double* alpha)
 {
   double u1 = reduced_latitude(p1.lat());
   double cosa1 = cos(v.a());
@@ -193,6 +194,29 @@ void Arc::vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vec
   r->set_r(v.r());
   p2->set_lat(f2);
   p2->set_lon(p1.lon() + dlinit);
+  *alpha = asin(sina);
+}
+
+bool Arc::intersects(const Line& line) const
+{
+  // TODO
+  return false;
+}
+
+Position Arc::intersection(const Line& line) const
+{
+  return Position(pi, 0);
+}
+
+bool Arc::intersects(const Arc& arc) const
+{
+  // TODO
+  return false;
+}
+
+Position Arc::intersection(const Arc& arc) const
+{
+  return Position(pi, 0);
 }
 
 }  // namespace geofun
