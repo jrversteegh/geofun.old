@@ -107,11 +107,33 @@ public:
   CPPUNIT_TEST_SUITE_END();
 };
 
+class ArcTest : public CppUnit::TestFixture {
+  void testDirectInverse() {
+    Position p1(0.8, 0.8);
+    Position p2(1.0, 1.0);
+    Arc arc1(p1, p2);
+    Line line1(p1, p2);
+
+    CPPUNIT_ASSERT(arc1.v().r() < line1.v().r());
+    Arc arc2(p1, arc1.v());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, arc2.p2().lat(), 1E-6);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, arc2.p2().lon(), 1E-6);
+    Vector d = arc1.p2() - p2;
+
+    CPPUNIT_ASSERT(d.r() < 10);
+  }
+public:
+  CPPUNIT_TEST_SUITE(ArcTest);
+  CPPUNIT_TEST(testDirectInverse);
+  CPPUNIT_TEST_SUITE_END();
+};
+
 int main()
 {
   CppUnit::TextUi::TestRunner runner;
   runner.addTest(VectorPositionTest::suite());
   runner.addTest(LineTest::suite());
+  runner.addTest(ArcTest::suite());
   if (runner.run()) 
     return 0; 
   else

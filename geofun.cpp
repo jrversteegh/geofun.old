@@ -120,20 +120,26 @@ void Arc::vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Ve
     sins = sqrt(sqr(cosu2 * sindl) + sqr(cosu1sinu2 - sinu1cosu2 * cosdl));
     coss = sinu1sinu2 + cosu1cosu2 * cosdl;
     sig = atan2(sins, coss);
-    sina = cosu1cosu2 * sindl;
+    sina = cosu1cosu2 * sindl / sins;
     sqcosa = 1 - sqr(sina);
     cos2sm = coss - 2 * sinu1sinu2 / sqcosa;
     double c = f / 16 * sqcosa * (4 + f * (4 - 3 * sqcosa));
     sqcos2sm = sqr(cos2sm);
     coss2sqcos2smm1 = coss * (2 * sqcos2sm - 1);
     dl = dlinit + (1 - c) * f * sina * (sig + c * sins * (cos2sm + c * coss2sqcos2smm1));
-  } while (fabs(dl -  dlprev) > 1E-8);
+  } while (fabs(dl -  dlprev) > 1E-7);
 
   double squ = sqcosa * (sqa - sqb) / sqb;
+  /* Original ->
+  double aa = 1 + squ / 16384 * (4096 + squ * (-768 + squ * (320 - 175 * squ)));
+  double bb = squ / 1024 * (256 + squ * (-128 + squ * (74 - 47 * squ)));
+  */
+  // Modified ->
   double sqrtsqup1 = sqrt(1 + squ);
   double k1 = (sqrtsqup1 - 1) / (sqrtsqup1 + 1);
   double aa = (1 + 0.25 * sqr(k1)) / (1 - k1);
   double bb = k1 * (1 - (3.0 / 8) * sqr(k1));
+    
   double dsig = bb * sins * (cos2sm + 0.25 * bb * (coss2sqcos2smm1 - 
       (1.0 / 6) * bb * cos2sm * (-3 + 4 * sqr(sins)) * (-3 + 4 * sqcos2sm)));
   v->set_r(b * aa * (sig - dsig));
@@ -175,13 +181,14 @@ void Arc::vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vec
     double dsig = bb * sins * (cos2sm + 0.25 * bb * (coss2sqcos2smm1 - 
         (1.0 / 6) * bb * cos2sm * (-3 + 4 * sqr(sins)) * (-3 + 4 * sqcos2sm)));
     sig = siginit + dsig;
-  } while (fabs(sig - sigprev) > 1E-8);
+  } while (fabs(sig - sigprev) > 1E-7);
 
   double f2 = atan2(sinu1 * coss + cosu1 * sins * cosa1,
       (1 - f) * sqrt(sqr(sina) + sqr(sinu1 * sins - cosu1 * coss * cosa1)));
   double dl = atan2(sins * sina1, cosu1 * coss - sinu1 * sins * cosa1);
   double c = f / 16 * sqcosa * (4 + f * (4 - 3 * sqcosa));
-  double dlinit = dl - (1 - c) * f * sina * (sig + c * sins * (cos2sm + c * coss2sqcos2smm1));
+  double dlinit = dl 
+      - (1 - c) * f * sina * (sig + c * sins * (cos2sm + c * coss2sqcos2smm1));
   r->set_a(pi - atan2(sina, -sinu1 * sins + cosu1 * coss * cosa1));
   r->set_r(v.r());
   p2->set_lat(f2);

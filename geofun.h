@@ -1,9 +1,12 @@
-#include <math.h>
-#include <algorithm>
-
 #ifndef __GEOFUN_H
 #define __GEOFUN_H
 
+#include <math.h>
+#include <algorithm>
+#include <assert.h>
+#include <iostream>
+
+using namespace std;
 
 namespace geofun {
 
@@ -16,7 +19,15 @@ static const double half_pi = 0.5 * pi;
 static const double sqa = a * a;
 static const double sqb = b * b;
 
+inline double deg_to_rad(const double degs)
+{
+  return degs * pi / 180;
+}
 
+inline double rad_to_deg(const double rads)
+{
+  return rads * 180 / pi;
+}
 
 inline double sqr(const double x)
 {
@@ -25,7 +36,7 @@ inline double sqr(const double x)
 
 inline double reduced_latitude(const double geodetic_latitude) 
 {
-  return atan((1 - f) * tan(geodetic_latitude));
+  return atan2((1 - f) * sin(geodetic_latitude), cos(geodetic_latitude));
 }
 
 inline double norm_angle_pipi(const double angle)
@@ -336,6 +347,12 @@ private:
 
 struct Arc {
   Arc(): _p1(), _p2(), _v(), _r() {}
+  Arc(const Position& p1, const Position& p2): _p1(p1), _p2(p2) {
+    vincenty_inverse(p1, p2, &_v, &_r);
+  }
+  Arc(const Position& p1, const Vector& v): _p1(p1), _v(v) {
+    vincenty_direct(p1, v, &_p2, &_r);
+  }
   Arc(const Arc& arc): _p1(arc._p1), _p2(arc._p2), _v(arc._v), _r(arc._r) {}
   Arc& operator=(const Arc& arc) {
     _p1 = arc._p1;
