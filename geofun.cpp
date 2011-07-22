@@ -1,43 +1,43 @@
 #include "geofun.h"
 #include <stdio.h>
 
-#include <iostream>
-using namespace std;
+//#include <iostream>
+//using namespace std;
 
 namespace geofun {
 
 
-Position& Position::operator+=(const Vector& value) 
+Position& Position::operator+=(const Vector& value)
 {
   Coord deltas1 = cartesian_deltas();
   Coord cart = value.cartesian();
   Position mid_pos;
-  mid_pos.set_latlon(
+  mid_pos.latlon(
       lat() + 0.5 * cart.x() / deltas1.x(),
       lon() + 0.5 * cart.y() / deltas1.y());
   Coord deltas2 = mid_pos.cartesian_deltas();
-  mid_pos.set_latlon(
+  mid_pos.latlon(
       lat() + cart.x() / (deltas1.x() + deltas2.x()),
       lon() + cart.y() / (deltas1.y() + deltas2.y()));
   deltas2 = mid_pos.cartesian_deltas();
   Position end_pos;
-  end_pos.set_latlon(
+  end_pos.latlon(
       lat() + cart.x() / deltas2.x(),
       lon() + cart.y() / deltas2.y());
   Coord deltas3 = end_pos.cartesian_deltas();
   Coord inv_deltas = (1.0 / 6) * (1 / deltas1 + 4 / deltas2 + 1 / deltas3);
-  set_latlon(lat() + cart.x() * inv_deltas.x(), lon() + cart.y() * inv_deltas.y());
+  latlon(lat() + cart.x() * inv_deltas.x(), lon() + cart.y() * inv_deltas.y());
   return *this;
 }
 
-Vector operator-(const Position& position2, const Position& position1)
+Vector Position::operator-(const Position& position) const
 {
-  double dlat = angle_diff(position2.lat(), position1.lat());
-  double dlon = angle_diff(position2.lon(), position1.lon());
-  Coord deltas1 = position1.cartesian_deltas();
-  Coord deltas3 = position2.cartesian_deltas();
+  double dlat = angle_diff(this->lat(), position.lat());
+  double dlon = angle_diff(this->lon(), position.lon());
+  Coord deltas1 = position.cartesian_deltas();
+  Coord deltas3 = this->cartesian_deltas();
   Position mid_lat;
-  mid_lat.set_lat(0.5 * (position1.lat() + position2.lat()));
+  mid_lat.lat(0.5 * (this->lat() + position.lat()));
   Coord deltas2 = mid_lat.cartesian_deltas();
   Coord deltas = 6.0 / (1.0 / deltas1 + 4.0 / deltas2 + 1.0 / deltas3);
   Coord cart = Coord(dlat  * deltas.x(), dlon  * deltas.y());
@@ -142,10 +142,10 @@ void Arc::vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Ve
     
   double dsig = bb * sins * (cos2sm + 0.25 * bb * (coss2sqcos2smm1 - 
       (1.0 / 6) * bb * cos2sm * (-3 + 4 * sqr(sins)) * (-3 + 4 * sqcos2sm)));
-  v->set_r(b * aa * (sig - dsig));
-  r->set_r(v->r());
-  v->set_a(atan2(cosu2 * sindl, cosu1sinu2 - sinu1cosu2 * cosdl));
-  r->set_a(pi - atan2(cosu1 * sindl, -sinu1cosu2 + cosu1sinu2 * cosdl));
+  v->r(b * aa * (sig - dsig));
+  r->r(v->r());
+  v->a(atan2(cosu2 * sindl, cosu1sinu2 - sinu1cosu2 * cosdl));
+  r->a(pi - atan2(cosu1 * sindl, -sinu1cosu2 + cosu1sinu2 * cosdl));
   *alpha = asin(sina);
 }
 
@@ -190,10 +190,10 @@ void Arc::vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vec
   double c = f / 16 * sqcosa * (4 + f * (4 - 3 * sqcosa));
   double dlinit = dl 
       - (1 - c) * f * sina * (sig + c * sins * (cos2sm + c * coss2sqcos2smm1));
-  r->set_a(pi - atan2(sina, -sinu1 * sins + cosu1 * coss * cosa1));
-  r->set_r(v.r());
-  p2->set_lat(f2);
-  p2->set_lon(p1.lon() + dlinit);
+  r->a(pi - atan2(sina, -sinu1 * sins + cosu1 * coss * cosa1));
+  r->r(v.r());
+  p2->lat(f2);
+  p2->lon(p1.lon() + dlinit);
   *alpha = asin(sina);
 }
 

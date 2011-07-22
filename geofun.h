@@ -83,8 +83,17 @@ inline double angle_diff(const double angle1, const double angle2)
   return norm_angle_pipi(angle1 - angle2);
 }
 
+struct Simple {
+  virtual double operator[](int i) const {
+    return 0;
+  }
+};
 
-struct Coord {
+struct Complex {
+  virtual const Simple& operator[](int i) const = 0; 
+};
+
+struct Coord: Simple {
   Coord(): _x(0), _y(0) {}
   Coord(const double x, const double y): _x(x), _y(y) {}
   Coord& operator=(const Coord& value) {
@@ -107,23 +116,42 @@ struct Coord {
     _y -= value._y;
     return *this;
   }
-  double operator[](int i) {
+  virtual double operator[](int i) const {
     switch (i) {
       case 0: return _x;
       case 1: return _y;
       default: return 0;
     }
   }
+  Coord operator+(const Coord& coord) const
+  {
+    Coord c = coord;
+    c += *this;
+    return c;
+  }
+  Coord operator-(const Coord& coord) const
+  {
+    Coord c = *this;
+    c -= coord;
+    return c;
+  }
+  Coord operator*(const double value) const
+  {
+    Coord c = *this;
+    c *= value;
+    return c;
+  }
+
   double x() const {
     return _x;
   }
   double y() const {
     return _y;
   }
-  void set_x(const double value) {
+  void x(const double value) {
     _x = value;
   }
-  void set_y(const double value) {
+  void y(const double value) {
     _y = value;
   }
 private:
@@ -131,41 +159,19 @@ private:
   double _y;
 };
 
-inline Coord operator+(const Coord& coord1, const Coord& coord2) 
-{
-  Coord c = coord1;
-  c += coord2;
-  return c;
-}
-
-inline Coord operator-(const Coord& coord1, const Coord& coord2) 
-{
-  Coord c = coord1;
-  c -= coord2;
-  return c;
-}
-
-inline Coord operator*(const Coord& coord, const double value) 
-{
-  Coord c = coord;
-  c *= value;
-  return c;
-}
-
 inline Coord operator*(const double value, const Coord& coord) 
 {
   Coord c = coord;
   c *= value;
   return c;
 }
-
 inline Coord operator/(const double value, const Coord& coord)
 {
   return Coord(value / coord.x(), value / coord.y());
 }
 
 
-struct Vector {
+struct Vector: Simple {
   Vector(): _a(0), _r(0) {}
   Vector(const double angle, const double range): _a(angle), _r(range) {}
   Vector(const Vector& vector): _a(vector._a), _r(vector._r) {}
@@ -187,7 +193,13 @@ struct Vector {
   Vector& operator*=(const double value) {
     _r *= value;
   }
-  double operator[](int i) {
+  Vector operator*(const double value) const
+  {
+    Vector result = *this;
+    result *= value;
+    return result;
+  }
+  virtual double operator[](int i) const {
     switch (i) {
       case 0: return _a;
       case 1: return _r;
@@ -204,10 +216,10 @@ struct Vector {
   double r() const {
     return _r;
   }
-  void set_a(const double value) {
+  void a(const double value) {
     _a = norm_angle_2pi(value);
   }
-  void set_r(const double value) {
+  void r(const double value) {
     _r = value;
   }
 private:
@@ -215,12 +227,6 @@ private:
   double _r;
 };
 
-inline Vector operator*(const Vector& vector1, const double vector2)
-{
-  Vector result = vector1;
-  result *= vector2;
-  return result;
-}
 
 inline Vector operator*(const double value, const Vector& vector)
 {
@@ -229,10 +235,10 @@ inline Vector operator*(const double value, const Vector& vector)
   return result;
 }
 
-struct Position {
+struct Position: Simple {
   Position(): _lat(0), _lon(0) {}
   Position(const double latitude, const double longitude): _lat(0), _lon(0) {
-    set_latlon(latitude, longitude);
+    latlon(latitude, longitude);
   }
   Position(const Position& position): _lat(position._lat), _lon(position._lon) {}
   Position& operator=(const Position& position) { 
@@ -241,32 +247,39 @@ struct Position {
     return *this;
   }
   Position& operator+=(const Vector& value); 
-  double lat() const {
-    return _lat;
+  Vector operator-(const Position& position) const;
+  inline Position operator+(const Vector& vector) const 
+  {
+    Position result(*this);
+    result += vector;
+    return result;
   }
-  double operator[](int i) {
+  virtual double operator[](int i) const {
     switch (i) {
       case 0: return _lat;
       case 1: return _lon;
       default: return 0;
     }
   }
+  double lat() const {
+    return _lat;
+  }
   double lon() const {
     return _lon;
   }
-  void set_lat(const double value) {
+  void lat(const double value) {
     _lat = value;
     if (norm_angle_pi2pi2(&_lat)) {
-      set_lon(lon() + pi);
+      lon(lon() + pi);
     }
   }
-  void set_lon(const double value) {
+  void lon(const double value) {
     _lon = norm_angle_pipi(value);
   }
-  void set_latlon(const double latitude, const double longitude) {
+  void latlon(const double latitude, const double longitude) {
     // When doing it in this order flying over the pole should work
-    set_lon(longitude);
-    set_lat(latitude);
+    lon(longitude);
+    lat(latitude);
   }
   Coord cartesian_deltas(void) const {
     double rl = reduced_latitude(lat());
@@ -280,15 +293,8 @@ private:
   double _lon;
 };
 
-Vector operator-(const Position& position1, const Position& position2);
-inline Position operator+(const Position& position, const Vector& vector) 
-{
-  Position result(position);
-  result += vector;
-  return result;
-}
 
-struct Line {
+struct Line: Complex {
   Line(): _p1(), _p2(), _v() {}
   Line(const Line& line): _p1(line._p1), _p2(line._p2), _v(line._v) {}
   Line(const Position& position1, const Position& position2):
@@ -300,6 +306,14 @@ struct Line {
     _p2 = line._p2;
     _v = line._v;
   }
+  virtual const Simple& operator[](int i) const {
+    switch(i) {
+      case 0: return _p1;
+      case 1: return _v;
+      case 2: return _p2;
+      default: _p1; 
+    }
+  }
   const Position& p1() const {
     return _p1;
   }
@@ -309,15 +323,15 @@ struct Line {
   const Vector& v() const {
     return _v;
   }
-  void set_p1(const Position& position) {
+  void p1(const Position& position) {
     _p1 = position;
     _v = _p2 - _p1;
   }
-  void set_p2(const Position& position) {
+  void p2(const Position& position) {
     _p2 = position;
     _v = _p2 - _p1;
   }
-  void set_v(const Vector& vector) {
+  void v(const Vector& vector) {
     _p2 = _p1 + vector;
     // v will not be set exactly...
     _v = _p2 - _p1;
@@ -342,7 +356,7 @@ private:
   Vector _v;
 };
 
-struct Arc {
+struct Arc: Complex {
   Arc(): _p1(), _p2(), _v(), _r() {}
   Arc(const Position& p1, const Position& p2): _p1(p1), _p2(p2) {
     vincenty_inverse(p1, p2, &_v, &_r, &_alpha);
@@ -358,12 +372,22 @@ struct Arc {
     _r = arc._r;
   }
   Arc& operator+=(const Vector& vector) {
-    Position p2;
+    Position p;
     Vector r;
     double alpha;
-    vincenty_direct(_p2, vector, &p2, &r, &alpha);
-    set_p2(p2);
+    vincenty_direct(_p2, vector, &p, &r, &alpha);
+    p2(p);
   }
+  virtual const Simple& operator[](int i) const {
+    switch(i) {
+      case 0: return _p1;
+      case 1: return _v;
+      case 2: return _p2;
+      case 3: return _r;
+      default: _p1; 
+    }
+  }
+
   const Position& p1() const {
     return _p1;
   }
@@ -376,19 +400,19 @@ struct Arc {
   const Vector& r() const {
     return _r;
   }
-  void set_p1(const Position& position) {
+  void p1(const Position& position) {
     _p1 = position;
     vincenty_inverse(_p1, _p2, &_v, &_r, &_alpha);
   }
-  void set_p2(const Position& position) {
+  void p2(const Position& position) {
     _p2 = position;
     vincenty_inverse(_p1, _p2, &_v, &_r, &_alpha);
   }
-  void set_v(const Vector& vector) {
+  void v(const Vector& vector) {
     _v = vector;
     vincenty_direct(_p1, vector, &_p2, &_r, &_alpha);
   }
-  void set_r(const Vector& vector) {
+  void r(const Vector& vector) {
     _r = vector;
     vincenty_direct(_p2, vector, &_p1, &_v, &_alpha);
   }
