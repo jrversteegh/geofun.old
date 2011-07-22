@@ -1,4 +1,4 @@
-#include "geofun.h"
+#include "geofun.hpp"
 #include <stdio.h>
 
 //#include <iostream>

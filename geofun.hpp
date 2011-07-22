@@ -1,5 +1,5 @@
-#ifndef __GEOFUN_H
-#define __GEOFUN_H
+#ifndef __GEOFUN_HPP
+#define __GEOFUN_HPP
 
 #include <math.h>
 #include <algorithm>
@@ -187,11 +187,12 @@ struct Vector: Simple {
   }
   Vector operator-() {
     Vector v(*this);
-    v._r = norm_angle_2pi(_r + pi);
+    v._a = norm_angle_2pi(_a + pi);
     return v;
   }
   Vector& operator*=(const double value) {
     _r *= value;
+    return *this;
   }
   Vector operator*(const double value) const
   {
@@ -305,14 +306,15 @@ struct Line: Complex {
     _p1 = line._p1;
     _p2 = line._p2;
     _v = line._v;
+    return *this;
   }
   virtual const Simple& operator[](int i) const {
     switch(i) {
       case 0: return _p1;
       case 1: return _v;
       case 2: return _p2;
-      default: _p1; 
     }
+    return _p1;
   }
   const Position& p1() const {
     return _p1;
@@ -337,16 +339,16 @@ struct Line: Complex {
     _v = _p2 - _p1;
   }
   double min_lat() const {
-    std::min(_p1.lat(), _p2.lat());
+    return std::min(_p1.lat(), _p2.lat());
   }
   double max_lat() const {
-    std::max(_p1.lat(), _p2.lat());
+    return std::max(_p1.lat(), _p2.lat());
   }
   double min_lon() const {
-    std::min(_p1.lon(), _p1.lon());
+    return std::min(_p1.lon(), _p1.lon());
   }
   double max_lon() const {
-    std::max(_p1.lon(), _p2.lon());
+    return std::max(_p1.lon(), _p2.lon());
   }
   bool intersects(const Line& line) const;
   Position intersection(const Line& line) const;
@@ -370,6 +372,7 @@ struct Arc: Complex {
     _p2 = arc._p2;
     _v = arc._v;
     _r = arc._r;
+    return *this;
   }
   Arc& operator+=(const Vector& vector) {
     Position p;
@@ -377,6 +380,7 @@ struct Arc: Complex {
     double alpha;
     vincenty_direct(_p2, vector, &p, &r, &alpha);
     p2(p);
+    return *this;
   }
   virtual const Simple& operator[](int i) const {
     switch(i) {
@@ -384,8 +388,8 @@ struct Arc: Complex {
       case 1: return _v;
       case 2: return _p2;
       case 3: return _r;
-      default: _p1; 
     }
+    return _p1;
   }
 
   const Position& p1() const {
@@ -417,16 +421,18 @@ struct Arc: Complex {
     vincenty_direct(_p2, vector, &_p1, &_v, &_alpha);
   }
   double min_lat() const {
-    //std::min(_p1.lat(), _p2.lat());
+    // TODO
+    return std::min(_p1.lat(), _p2.lat());
   }
   double max_lat() const {
-    //std::max(_p1.lat(), _p2.lat());
+    // TODO
+    return std::max(_p1.lat(), _p2.lat());
   }
   double min_lon() const {
-    std::min(_p1.lon(), _p1.lon());
+    return std::min(_p1.lon(), _p1.lon());
   }
   double max_lon() const {
-    std::max(_p1.lon(), _p2.lon());
+    return std::max(_p1.lon(), _p2.lon());
   }
   bool intersects(const Line& line) const;
   Position intersection(const Line& line) const;

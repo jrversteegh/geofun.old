@@ -1,7 +1,7 @@
 %module geofun
 %include "typemaps.i"
 %{
-#include "geofun.h"
+#include "geofun.hpp"
 %}
 
 %rename (__getitem__) *::operator[];
@@ -30,7 +30,7 @@
 %rename (_set_r) *::r(const Vector&);
 
 
-%include "geofun.h"
+%include "geofun.hpp"
 
 %pythoncode %{
 def set_property(clss, name):
