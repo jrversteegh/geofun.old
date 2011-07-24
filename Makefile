@@ -1,10 +1,10 @@
 PYTHON_INCLUDES = `python-config --includes`
 PYTHON_LIBS = `python-config --libs`
 
-all: geofun.cpp geofun.h
+all: geofun.cpp geofun.hpp
 	@g++ -c -O2 -fPIC -fno-stack-protector -o geofun.o geofun.cpp
 
-test: test_geofun.cpp geofun.cpp geofun.h
+test: test_geofun.cpp geofun.cpp geofun.hpp
 	@g++ -o test_geofun -lcppunit test_geofun.cpp geofun.cpp
 	@./test_geofun
 

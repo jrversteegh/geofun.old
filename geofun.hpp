@@ -345,10 +345,10 @@ struct Line: Complex {
     return std::max(_p1.lat(), _p2.lat());
   }
   double min_lon() const {
-    return std::min(_p1.lon(), _p1.lon());
+    return _v.a() <= pi ? _p1.lon() : _p2.lon();
   }
   double max_lon() const {
-    return std::max(_p1.lon(), _p2.lon());
+    return _v.a() <= pi ? _p2.lon() : _p1.lon();
   }
   bool intersects(const Line& line) const;
   Position intersection(const Line& line) const;

@@ -69,7 +69,7 @@ bool Line::intersects(const Line& line) const {
 
 Position Line::intersection(const Line& line) const {
   if (!intersects(line)) {
-    return Position(pi, 0);
+    return Position(-pi, 0);
   }
   
   Position p(_p1);
@@ -216,7 +216,7 @@ bool Arc::intersects(const Arc& arc) const
 
 Position Arc::intersection(const Arc& arc) const
 {
-  return Position(pi, 0);
+  return Position(-pi, 0);
 }
 
 }  // namespace geofun
