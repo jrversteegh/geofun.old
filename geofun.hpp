@@ -87,10 +87,16 @@ struct Simple {
   virtual double operator[](int i) const {
     return 0;
   }
+  virtual int size() const {
+    return 0;
+  }
 };
 
 struct Complex {
   virtual const Simple& operator[](int i) const = 0; 
+  virtual int size() const {
+    return 0;
+  }
 };
 
 struct Coord: Simple {
@@ -100,6 +106,9 @@ struct Coord: Simple {
     _x = value._x;
     _y = value._y;
     return *this;
+  }
+  Coord operator-() {
+    return Coord(-_x, -_y);
   }
   Coord& operator*=(const double value) {
     _x *= value;
@@ -123,6 +132,9 @@ struct Coord: Simple {
       default: return 0;
     }
   }
+  virtual int size() const {
+    return 2;
+  }
   Coord operator+(const Coord& coord) const
   {
     Coord c = coord;
@@ -140,6 +152,13 @@ struct Coord: Simple {
     Coord c = *this;
     c *= value;
     return c;
+  }
+
+  double dot(const Coord& coord) {
+    return _x * coord._x + _y * coord._y;
+  }
+  double cross(const Coord& coord) {
+    return _x * coord._y - _y * coord._x;
   }
 
   double x() const {
@@ -200,6 +219,22 @@ struct Vector: Simple {
     result *= value;
     return result;
   }
+  Vector& operator+=(const Vector& vector) {
+    cartesian(cartesian() + vector.cartesian());
+  }
+  Vector& operator-=(const Vector& vector) {
+    cartesian(cartesian() - vector.cartesian());
+  }
+  Vector operator+(const Vector& vector) {
+    Vector result(*this);
+    result += vector;
+    return result;
+  }
+  Vector operator-(const Vector& vector) {
+    Vector result(*this);
+    result -= vector;
+    return result;
+  }
   virtual double operator[](int i) const {
     switch (i) {
       case 0: return _a;
@@ -207,9 +242,34 @@ struct Vector: Simple {
       default: return 0;
     }
   }
+  virtual int size() const {
+    return 2;
+  }
+  bool operator>(const Vector& vector) const {
+    return _r > vector._r;
+  }
+  bool operator<(const Vector& vector) const {
+    return _r < vector._r;
+  }
+  bool operator>=(const Vector& vector) const {
+    return _r >= vector._r;
+  }
+  bool operator<=(const Vector& vector) const {
+    return _r <= vector._r;
+  }
 
   Coord cartesian() const {
     return Coord(_r * cos(_a), _r * sin(_a));
+  }
+  void cartesian(const Coord& coord) {
+    _r = sqrt(sqr(coord.x()) + sqr(coord.y()));
+    _a = norm_angle_2pi(atan2(coord.y(), coord.x()));
+  }
+  double dot(const Vector& vector) const {
+    return _r * vector._r * cos(vector._a - a_);
+  }
+  double cross(const Vector& vector) const {
+    return _r * vector._r * sin(vector.a_ - _a);
   }
   double a() const {
     return _a;
@@ -261,6 +321,9 @@ struct Position: Simple {
       case 1: return _lon;
       default: return 0;
     }
+  }
+  virtual int size() const {
+    return 2;
   }
   double lat() const {
     return _lat;
@@ -315,6 +378,9 @@ struct Line: Complex {
       case 2: return _p2;
     }
     return _p1;
+  }
+  virtual int size() const {
+    return 3;
   }
   const Position& p1() const {
     return _p1;
@@ -390,6 +456,9 @@ struct Arc: Complex {
       case 3: return _r;
     }
     return _p1;
+  }
+  virtual int size() const {
+    return 4;
   }
 
   const Position& p1() const {

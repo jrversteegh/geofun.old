@@ -6,6 +6,7 @@
 
 %rename (__getitem__) *::operator[];
 %rename (__assign__) *::operator=;
+%rename (__len__) *::size;
 
 %rename (_get_lat) *::lat;
 %rename (_set_lat) *::lat(const double);

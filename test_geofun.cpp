@@ -71,11 +71,23 @@ class VectorPositionTest : public CppUnit::TestFixture {
     CPPUNIT_ASSERT_DOUBLES_EQUAL(INFINITY, a / b, 1E-12);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0, a / INFINITY, 1E-12);
   }
+  void testDotCross() {
+    Vector v1 = Vector(0.5, 3);
+    Vector v2 = Vector(5, 2);
+    double dot = v1.dot(v2);
+    double cross = v1.cross(v2);
+    Coord c1 = v1.cartesian();
+    Coord c2 = v2.cartesian();
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(c1.dot(c2), dot, 1E-12);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(c1.cross(c2), cross, 1E-12);
+  }
 public:
   CPPUNIT_TEST_SUITE(VectorPositionTest);
   CPPUNIT_TEST(testNormAngle);
   CPPUNIT_TEST(testOperators);
   CPPUNIT_TEST(testDivisionByZero);
+  CPPUNIT_TEST(testDotCross);
   CPPUNIT_TEST_SUITE_END();
 };
 
