@@ -77,10 +77,21 @@ inline bool norm_angle_pi2pi2(double* angle)
   }
 }
 
-
 inline double angle_diff(const double angle1, const double angle2) 
 {
   return norm_angle_pipi(angle1 - angle2);
+}
+
+inline bool floats_equal(const double value1, const double value2)
+{
+  double abs1 = fabs(value1);
+  double abs2 = fabs(value2);
+  double absmax = std::max(value1, value2);
+  double eps = 1E-14;
+  if (absmax > 1) {
+    eps *= absmax;
+  }
+  return fabs(value1 - value2) < eps;
 }
 
 struct Simple {
@@ -109,6 +120,9 @@ struct Coord: Simple {
   }
   Coord operator-() {
     return Coord(-_x, -_y);
+  }
+  bool operator==(const Coord& coord) const {
+    return floats_equal(_x, coord._x) and floats_equal(_y, coord._y);
   }
   Coord& operator*=(const double value) {
     _x *= value;
@@ -209,8 +223,20 @@ struct Vector: Simple {
     v._a = norm_angle_2pi(_a + pi);
     return v;
   }
+  bool operator==(const Vector& vector) const {
+    return floats_equal(_a, vector._a) and floats_equal(_r, vector._r);
+  }
+
   Vector& operator*=(const double value) {
     _r *= value;
+    return *this;
+  }
+  Vector& operator+=(const Vector& vector) {
+    cartesian(cartesian() + vector.cartesian());
+    return *this;
+  }
+  Vector& operator-=(const Vector& vector) {
+    cartesian(cartesian() - vector.cartesian());
     return *this;
   }
   Vector operator*(const double value) const
@@ -219,18 +245,12 @@ struct Vector: Simple {
     result *= value;
     return result;
   }
-  Vector& operator+=(const Vector& vector) {
-    cartesian(cartesian() + vector.cartesian());
-  }
-  Vector& operator-=(const Vector& vector) {
-    cartesian(cartesian() - vector.cartesian());
-  }
-  Vector operator+(const Vector& vector) {
+  Vector operator+(const Vector& vector) const {
     Vector result(*this);
     result += vector;
     return result;
   }
-  Vector operator-(const Vector& vector) {
+  Vector operator-(const Vector& vector) const {
     Vector result(*this);
     result -= vector;
     return result;
@@ -307,14 +327,18 @@ struct Position: Simple {
     _lon = position._lon;
     return *this;
   }
+  bool operator==(const Position& position) const {
+    return floats_equal(_lat, position._lat) and floats_equal(_lon, position._lon);
+  }
   Position& operator+=(const Vector& value); 
   Vector operator-(const Position& position) const;
-  inline Position operator+(const Vector& vector) const 
+  Position operator+(const Vector& vector) const 
   {
     Position result(*this);
     result += vector;
     return result;
   }
+
   virtual double operator[](int i) const {
     switch (i) {
       case 0: return _lat;
