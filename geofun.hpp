@@ -86,7 +86,7 @@ inline bool floats_equal(const double value1, const double value2)
 {
   double abs1 = fabs(value1);
   double abs2 = fabs(value2);
-  double absmax = std::max(value1, value2);
+  double absmax = std::max(abs1, abs2);
   double eps = 1E-14;
   if (absmax > 1) {
     eps *= absmax;
