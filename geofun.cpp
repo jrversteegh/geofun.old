@@ -7,10 +7,11 @@
 namespace geofun {
 
 
-Position& Position::operator+=(const Vector& value)
+Position& Position::operator+=(const Simple& value)
 {
   Coord deltas1 = cartesian_deltas();
-  Coord cart = value.cartesian();
+  const Vector& v = dynamic_cast<const Vector&>(value);
+  Coord cart = v.cartesian();
   Position mid_pos;
   mid_pos.latlon(
       lat() + 0.5 * cart.x() / deltas1.x(),
@@ -30,14 +31,15 @@ Position& Position::operator+=(const Vector& value)
   return *this;
 }
 
-Vector Position::operator-(const Position& position) const
+Vector Position::operator-(const Simple& position) const
 {
-  double dlat = angle_diff(this->lat(), position.lat());
-  double dlon = angle_diff(this->lon(), position.lon());
-  Coord deltas1 = position.cartesian_deltas();
+  double dlat = angle_diff(this->lat(), position[0]);
+  double dlon = angle_diff(this->lon(), position[1]);
+  const Position& p = dynamic_cast<const Position&>(position);
+  Coord deltas1 = p.cartesian_deltas();
   Coord deltas3 = this->cartesian_deltas();
   Position mid_lat;
-  mid_lat.lat(0.5 * (this->lat() + position.lat()));
+  mid_lat.lat(0.5 * (this->lat() + position[0]));
   Coord deltas2 = mid_lat.cartesian_deltas();
   Coord deltas = 6.0 / (1.0 / deltas1 + 4.0 / deltas2 + 1.0 / deltas3);
   Coord cart = Coord(dlat  * deltas.x(), dlon  * deltas.y());

@@ -113,6 +113,8 @@ struct Complex {
 struct Coord: Simple {
   Coord(): _x(0), _y(0) {}
   Coord(const double x, const double y): _x(x), _y(y) {}
+  Coord(const Coord& coord): _x(coord._x), _y(coord._y) {}
+  Coord(const Simple& coord): _x(coord[0]), _y(coord[1]) {}
   Coord& operator=(const Coord& value) {
     _x = value._x;
     _y = value._y;
@@ -121,8 +123,8 @@ struct Coord: Simple {
   Coord operator-() {
     return Coord(-_x, -_y);
   }
-  bool operator==(const Coord& coord) const {
-    return floats_equal(_x, coord._x) and floats_equal(_y, coord._y);
+  bool operator==(const Simple& coord) const {
+    return floats_equal(_x, coord[0]) and floats_equal(_y, coord[1]);
   }
   Coord& operator*=(const double value) {
     _x *= value;
@@ -198,6 +200,7 @@ inline Coord operator*(const double value, const Coord& coord)
   c *= value;
   return c;
 }
+
 inline Coord operator/(const double value, const Coord& coord)
 {
   return Coord(value / coord.x(), value / coord.y());
@@ -208,6 +211,7 @@ struct Vector: Simple {
   Vector(): _a(0), _r(0) {}
   Vector(const double angle, const double range): _a(angle), _r(range) {}
   Vector(const Vector& vector): _a(vector._a), _r(vector._r) {}
+  Vector(const Simple& vector): _a(vector[0]), _r(vector[1]) {}
   Vector(const Coord& coord) {
     _r = sqrt(sqr(coord.x()) + sqr(coord.y()));
     _a = norm_angle_2pi(atan2(coord.y(), coord.x()));
@@ -223,8 +227,8 @@ struct Vector: Simple {
     v._a = norm_angle_2pi(_a + pi);
     return v;
   }
-  bool operator==(const Vector& vector) const {
-    return floats_equal(_a, vector._a) and floats_equal(_r, vector._r);
+  bool operator==(const Simple& vector) const {
+    return floats_equal(_a, vector[0]) and floats_equal(_r, vector[1]);
   }
 
   Vector& operator*=(const double value) {
@@ -282,7 +286,7 @@ struct Vector: Simple {
     return Coord(_r * cos(_a), _r * sin(_a));
   }
   void cartesian(const Coord& coord) {
-    _r = sqrt(sqr(coord.x()) + sqr(coord.y()));
+    _r = hypot(coord.x(), coord.y());
     _a = norm_angle_2pi(atan2(coord.y(), coord.x()));
   }
   double dot(const Vector& vector) const {
@@ -322,17 +326,18 @@ struct Position: Simple {
     latlon(latitude, longitude);
   }
   Position(const Position& position): _lat(position._lat), _lon(position._lon) {}
-  Position& operator=(const Position& position) { 
-    _lat = position._lat;
-    _lon = position._lon;
+  Position(const Simple& position): _lat(position[0]), _lon(position[1]) {}
+  Position& operator=(const Simple& position) { 
+    _lat = position[0];
+    _lon = position[1];
     return *this;
   }
-  bool operator==(const Position& position) const {
-    return floats_equal(_lat, position._lat) and floats_equal(_lon, position._lon);
+  bool operator==(const Simple& position) const {
+    return floats_equal(_lat, position[0]) and floats_equal(_lon, position[1]);
   }
-  Position& operator+=(const Vector& value); 
-  Vector operator-(const Position& position) const;
-  Position operator+(const Vector& vector) const 
+  Position& operator+=(const Simple& value); 
+  Vector operator-(const Simple& position) const;
+  Position operator+(const Simple& vector) const 
   {
     Position result(*this);
     result += vector;
@@ -375,6 +380,18 @@ struct Position: Simple {
         a * b * sqrt(sqa * sqr(sin(rl)) + sqb * sqr(cos(rl))) 
             / ((sqa - sqb) * sqr(cos(lat())) + sqb),
         a * cos(rl));
+  }
+  int compare(const Simple& position) const {
+    if (_lat < position[0])
+      return -1;
+    else if (_lat > position[0])
+      return 1;
+    else if (_lon < position[1])
+      return -1;
+    else if (_lon > position[1])
+      return 1;
+    else
+      return 0;
   }
 private:
   double _lat;
