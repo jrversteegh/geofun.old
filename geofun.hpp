@@ -266,10 +266,10 @@ struct Vector: Simple {
     _a = norm_angle_2pi(atan2(coord.y(), coord.x()));
   }
   double dot(const Vector& vector) const {
-    return _r * vector._r * cos(vector._a - a_);
+    return _r * vector._r * cos(vector._a - _a);
   }
   double cross(const Vector& vector) const {
-    return _r * vector._r * sin(vector.a_ - _a);
+    return _r * vector._r * sin(vector._a - _a);
   }
   double a() const {
     return _a;
