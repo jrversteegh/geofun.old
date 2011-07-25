@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-#include "geofun.h"
+#include "geofun.hpp"
 
 using namespace geofun;
 using namespace std;
