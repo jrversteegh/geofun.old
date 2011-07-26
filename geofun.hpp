@@ -114,17 +114,16 @@ struct Coord: Simple {
   Coord(): _x(0), _y(0) {}
   Coord(const double x, const double y): _x(x), _y(y) {}
   Coord(const Coord& coord): _x(coord._x), _y(coord._y) {}
-  Coord(const Simple& coord): _x(coord[0]), _y(coord[1]) {}
   Coord& operator=(const Coord& value) {
     _x = value._x;
     _y = value._y;
     return *this;
   }
-  Coord operator-() {
+  Coord operator-() const {
     return Coord(-_x, -_y);
   }
-  bool operator==(const Simple& coord) const {
-    return floats_equal(_x, coord[0]) and floats_equal(_y, coord[1]);
+  bool operator==(const Coord& coord) const {
+    return floats_equal(_x, coord._x) and floats_equal(_y, coord._y);
   }
   Coord& operator*=(const double value) {
     _x *= value;
@@ -211,7 +210,6 @@ struct Vector: Simple {
   Vector(): _a(0), _r(0) {}
   Vector(const double angle, const double range): _a(angle), _r(range) {}
   Vector(const Vector& vector): _a(vector._a), _r(vector._r) {}
-  Vector(const Simple& vector): _a(vector[0]), _r(vector[1]) {}
   Vector(const Coord& coord) {
     _r = sqrt(sqr(coord.x()) + sqr(coord.y()));
     _a = norm_angle_2pi(atan2(coord.y(), coord.x()));
@@ -222,13 +220,13 @@ struct Vector: Simple {
     _r = vector._r;
     return *this;
   }
-  Vector operator-() {
+  Vector operator-() const {
     Vector v(*this);
     v._a = norm_angle_2pi(_a + pi);
     return v;
   }
-  bool operator==(const Simple& vector) const {
-    return floats_equal(_a, vector[0]) and floats_equal(_r, vector[1]);
+  bool operator==(const Vector& vector) const {
+    return floats_equal(_a, vector._a) and floats_equal(_r, vector._r);
   }
 
   Vector& operator*=(const double value) {
@@ -326,21 +324,27 @@ struct Position: Simple {
     latlon(latitude, longitude);
   }
   Position(const Position& position): _lat(position._lat), _lon(position._lon) {}
-  Position(const Simple& position): _lat(position[0]), _lon(position[1]) {}
-  Position& operator=(const Simple& position) { 
-    _lat = position[0];
-    _lon = position[1];
+  Position& operator=(const Position& position) { 
+    _lat = position._lat;
+    _lon = position._lon;
     return *this;
   }
-  bool operator==(const Simple& position) const {
-    return floats_equal(_lat, position[0]) and floats_equal(_lon, position[1]);
+  bool operator==(const Position& position) const {
+    return floats_equal(_lat, position._lat) and floats_equal(_lon, position._lon);
   }
-  Position& operator+=(const Simple& value); 
-  Vector operator-(const Simple& position) const;
-  Position operator+(const Simple& vector) const 
-  {
+  Position& operator+=(const Vector& vector); 
+  Position& operator-=(const Vector& vector) {
+    return *this += -vector;
+  }
+  Vector operator-(const Position& position) const;
+  Position operator+(const Vector& vector) const {
     Position result(*this);
     result += vector;
+    return result;
+  }
+  Position operator-(const Vector& vector) const {
+    Position result(*this);
+    result -= vector;
     return result;
   }
 

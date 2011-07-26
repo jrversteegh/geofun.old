@@ -1,7 +1,13 @@
 %module geofun
+
 %include "typemaps.i"
+%include "exception.i"
+
 %{
 #include "geofun.hpp"
+
+// --> for bad_cast
+#include <typeinfo>
 %}
 
 %rename (__getitem__) *::operator[];
@@ -33,6 +39,38 @@
 
 
 %include "geofun.hpp"
+
+%exception {
+  try {
+    $action
+  } 
+  catch (const std::bad_cast& e) {
+    SWIG_exception(SWIG_TypeError, e.what());
+  }
+}
+
+%extend geofun::Position {
+  bool operator==(const Simple& position) const {
+    return *$self == dynamic_cast<const geofun::Position&>(position);
+  }
+  Position& operator=(const Position& position) { 
+    return *$self = dynamic_cast<const geofun::Position&>(position);
+  }
+  Position& operator+=(const Simple& vector) {
+    const geofun::Vector& v = dynamic_cast<const geofun::Vector&>(vector);
+    return *$self += v;
+  }
+  Vector operator-(const Simple& position) const {
+    const geofun::Position& p = dynamic_cast<const geofun::Position&>(position);
+    return *$self - p;
+  }
+  Position operator+(const Simple& vector) const {
+    const geofun::Vector& v = dynamic_cast<const geofun::Vector&>(vector);
+    return *$self + v;
+  }
+};
+
+%exception;
 
 %pythoncode %{
 def set_property(clss, name):
