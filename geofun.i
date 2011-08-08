@@ -37,8 +37,18 @@
 %rename (_get_r) *::r;
 %rename (_set_r) *::r(const Vector&);
 
+%exception *::operator[] {
+  try {
+    $action
+  } 
+  catch (const geofun::IndexError& e) {
+    SWIG_exception(SWIG_IndexError, e.what());
+  }
+}
 
 %include "geofun.hpp"
+
+%exception;
 
 %exception {
   try {

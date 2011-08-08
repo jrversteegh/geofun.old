@@ -6,6 +6,7 @@
 
 namespace geofun {
 
+char IndexError::msg[64];
 
 Position& Position::operator+=(const Vector& vector)
 {

@@ -3,7 +3,8 @@
 
 #include <math.h>
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
+#include <cstdio>
 
 namespace geofun {
 
@@ -87,16 +88,27 @@ inline bool floats_equal(const double value1, const double value2)
   double abs1 = fabs(value1);
   double abs2 = fabs(value2);
   double absmax = std::max(abs1, abs2);
-  double eps = 1E-14;
+  double eps = 1E-12;
   if (absmax > 1) {
     eps *= absmax;
   }
   return fabs(value1 - value2) < eps;
 }
 
+struct IndexError {
+  IndexError(const int i): _i(i) {}
+  const char* what() const throw() {
+    snprintf(msg, 64, "Index out of range: %d", _i);
+    return msg;
+  }
+private:
+  int _i;
+  static char msg[64];
+};
+
 struct Simple {
   virtual double operator[](int i) const {
-    return 0;
+    throw IndexError(i);
   }
   virtual int size() const {
     return 0;
@@ -144,7 +156,7 @@ struct Coord: Simple {
     switch (i) {
       case 0: return _x;
       case 1: return _y;
-      default: return 0;
+      default: throw IndexError(i);
     }
   }
   virtual int size() const {
@@ -261,7 +273,7 @@ struct Vector: Simple {
     switch (i) {
       case 0: return _a;
       case 1: return _r;
-      default: return 0;
+      default: throw IndexError(i);
     }
   }
   virtual int size() const {
@@ -352,7 +364,7 @@ struct Position: Simple {
     switch (i) {
       case 0: return _lat;
       case 1: return _lon;
-      default: return 0;
+      default: throw IndexError(i);
     }
   }
   virtual int size() const {
@@ -421,8 +433,8 @@ struct Line: Complex {
       case 0: return _p1;
       case 1: return _v;
       case 2: return _p2;
+      default: throw IndexError(i);
     }
-    return _p1;
   }
   virtual int size() const {
     return 3;
@@ -499,8 +511,8 @@ struct Arc: Complex {
       case 1: return _v;
       case 2: return _p2;
       case 3: return _r;
+      default: throw IndexError(i);
     }
-    return _p1;
   }
   virtual int size() const {
     return 4;
