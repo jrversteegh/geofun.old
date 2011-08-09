@@ -58,10 +58,10 @@ bool Line::intersects(const Line& line) const {
   Vector v22 = _p2 - line._p1;
   double da1 = angle_diff(v11.a(), _v.a());
   double da2 = angle_diff(v12.a(), _v.a());
-  if ((da1 >= 0 and da2 < 0) or (da1 < 0 and da2 >=0)) {
+  if ((da1 > 0 and da2 < 0) or (da1 < 0 and da2 > 0)) {
     double da3 = angle_diff(v21.a(), line._v.a());
     double da4 = angle_diff(v22.a(), line._v.a());
-    if ((da3 >= 0 and da4 < 0) or (da3 < 0 and da4 >=0)) {
+    if ((da3 > 0 and da4 < 0) or (da3 < 0 and da4 > 0)) {
       return true;
     }
   }
