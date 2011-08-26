@@ -5,17 +5,20 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
+#include <string>
 
 namespace geofun {
 
 static const double a = 6378137.0;   // Earth equatorial radius
 static const double b = 6356752.3;   // Earth polar radius
+static const double r = (a + b) / 2; // Average earth radius
 static const double f = (a - b) / a; // Earth ellipsoid flattening
 static const double pi = 3.14159265358979323846;
 static const double two_pi = 2 * pi;
 static const double half_pi = 0.5 * pi;
 static const double sqa = a * a;
 static const double sqb = b * b;
+
 
 inline double deg_to_rad(const double degs)
 {
@@ -105,6 +108,14 @@ private:
   int _i;
   static char msg[64];
 };
+
+struct EarthModelError {
+  EarthModelError() {} 
+  const char* what() const throw() {
+    return "Unknown earth model. Available are: \"wgs84\", \"spherical\"";
+  }
+};
+  
 
 struct Simple {
   virtual double operator[](int i) const {
@@ -330,6 +341,31 @@ inline Vector operator*(const double value, const Vector& vector)
   return result;
 }
 
+struct EarthModel {
+  virtual Coord cartesian_deltas(const double lat) {
+    return Coord(1, 1);
+  };
+};
+
+struct Sphere: EarthModel {
+  virtual Coord cartesian_deltas(const double lat) {
+    return Coord(r, r * cos(lat));
+  }
+};
+
+struct WGS84: EarthModel {
+  virtual Coord cartesian_deltas(const double lat) {
+    double rl = reduced_latitude(lat);
+    return Coord(
+        a * b * sqrt(sqa * sqr(sin(rl)) + sqb * sqr(cos(rl))) 
+            / ((sqa - sqb) * sqr(cos(lat)) + sqb),
+        a * cos(rl));
+  }
+};
+
+extern EarthModel* earth_model;
+extern void set_earth_model(const std::string& model_name);
+
 struct Position: Simple {
   Position(): _lat(0), _lon(0) {}
   Position(const double latitude, const double longitude): _lat(0), _lon(0) {
@@ -391,11 +427,7 @@ struct Position: Simple {
     lat(latitude);
   }
   Coord cartesian_deltas(void) const {
-    double rl = reduced_latitude(lat());
-    return Coord(
-        a * b * sqrt(sqa * sqr(sin(rl)) + sqb * sqr(cos(rl))) 
-            / ((sqa - sqb) * sqr(cos(lat())) + sqb),
-        a * cos(rl));
+    return earth_model->cartesian_deltas(lat());
   }
   int compare(const Simple& position) const {
     if (_lat < position[0])
@@ -413,7 +445,6 @@ private:
   double _lat;
   double _lon;
 };
-
 
 struct Line: Complex {
   Line(): _p1(), _p2(), _v() {}

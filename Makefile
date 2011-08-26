@@ -17,8 +17,8 @@ module: geofun.o geofun.i
 
 install: geofun.o geofun.i setup.py
 	@swig -c++ -python geofun.i
-	@python setup.py build
-	@sudo python setup.py install
+	@python2.7 setup.py build
+	@sudo python2.7 setup.py install
 
 
 .PHONY: clean all

@@ -8,6 +8,24 @@ namespace geofun {
 
 char IndexError::msg[64];
 
+static WGS84 wgs84;
+static Sphere sphere;
+
+EarthModel* earth_model = &wgs84;
+
+void set_earth_model(const std::string& model_name)
+{
+  if (model_name == "wgs84") {
+    earth_model = &wgs84;
+  }
+  else if (model_name == "spherical") {
+    earth_model = &sphere;
+  }
+  else {
+    throw EarthModelError();
+  }
+}
+
 Position& Position::operator+=(const Vector& vector)
 {
   Coord deltas1 = cartesian_deltas();

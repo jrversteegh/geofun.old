@@ -2,6 +2,7 @@
 
 %include "typemaps.i"
 %include "exception.i"
+%include "std_string.i"
 
 %{
 #include "geofun.hpp"
@@ -43,6 +44,15 @@
   } 
   catch (const geofun::IndexError& e) {
     SWIG_exception(SWIG_IndexError, e.what());
+  }
+}
+
+%exception set_earth_model {
+  try {
+    $action
+  } 
+  catch (const geofun::EarthModelError& e) {
+    SWIG_exception(SWIG_ValueError, e.what());
   }
 }
 
