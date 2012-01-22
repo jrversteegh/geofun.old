@@ -92,6 +92,68 @@
 
 %exception;
 
+// Add __repr__ and __str__ methods
+
+%extend geofun::Coord {
+  char* __str__() {
+    static char temp[64];
+    sprintf(temp, "%.4f, %.4f", $self->x(), self->y());
+    return &temp[0];
+  }
+  char* __repr__() {
+    static char temp[64];
+    sprintf(temp, "Coord(%f, %f)", $self->x(), self->y());
+    return &temp[0];
+  }
+}
+
+%extend geofun::Vector {
+  char* __str__() {
+    static char temp[64];
+    sprintf(temp, "%.2f, %.2f", $self->a(), self->r());
+    return &temp[0];
+  }
+  char* __repr__() {
+    static char temp[64];
+    sprintf(temp, "Vector(%f, %f)", $self->a(), self->r());
+    return &temp[0];
+  }
+}
+
+%extend geofun::Position {
+  char* __str__() {
+    static char temp[64];
+    sprintf(temp, "%.5f, %.5f", $self->lat(), self->lon());
+    return &temp[0];
+  }
+  char* __repr__() {
+    static char temp[64];
+    sprintf(temp, "Position(%f, %f)", $self->lat(), self->lon());
+    return &temp[0];
+  }
+}
+
+%extend geofun::Line {
+  char* __str__() {
+    static char temp[64];
+    sprintf(temp, "%.5f, %.5f - %.5f, %.5f", 
+        $self->p1().lat(),
+        $self->p1().lon(),
+        $self->p2().lat(),
+        $self->p2().lon());
+    return &temp[0];
+  }
+  char* __repr__() {
+    static char temp[128];
+    sprintf(temp, "Line(Position(%f, %f), Position(%f, %f))", 
+        $self->p1().lat(),
+        $self->p1().lon(),
+        $self->p2().lat(),
+        $self->p2().lon());
+    return &temp[0];
+  }
+}
+
 %pythoncode %{
 def set_property(clss, name):
     getter = getattr(clss, "_get_" + name)
