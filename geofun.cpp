@@ -51,8 +51,8 @@ Position& Position::operator+=(const Vector& vector)
 
 Vector Position::operator-(const Position& position) const
 {
-  double dlat = angle_diff(this->lat(), position[0]);
-  double dlon = angle_diff(this->lon(), position[1]);
+  double dlat = angle_diff(this->lat(), position.lat());
+  double dlon = angle_diff(this->lon(), position.lon());
   Coord deltas1 = position.cartesian_deltas();
   Coord deltas3 = this->cartesian_deltas();
   Position mid_lat;
@@ -61,6 +61,12 @@ Vector Position::operator-(const Position& position) const
   Coord deltas = 6.0 / (1.0 / deltas1 + 4.0 / deltas2 + 1.0 / deltas3);
   Coord cart = Coord(dlat  * deltas.x(), dlon  * deltas.y());
   return Vector(cart);
+}
+
+Vector Position::operator-(const Simple& position) const
+{
+  Position p(position);
+  return this->operator-(p);
 }
 
 bool Line::intersects(const Line& line) const { 

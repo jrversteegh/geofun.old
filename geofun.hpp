@@ -372,19 +372,35 @@ struct Position: Simple {
     latlon(latitude, longitude);
   }
   Position(const Position& position): _lat(position._lat), _lon(position._lon) {}
+  Position(const Simple& position): _lat(0), _lon(0) {
+    *this = position;
+  }
   Position& operator=(const Position& position) { 
     _lat = position._lat;
     _lon = position._lon;
     return *this;
   }
+  Position& operator=(const Simple& position) { 
+    if (position.size() > 2)  {
+      _lat = position[0];
+      _lon = position[1];
+    }
+    return *this;
+  }
   bool operator==(const Position& position) const {
     return floats_equal(_lat, position._lat) and floats_equal(_lon, position._lon);
+  }
+  bool operator==(const Simple& position) const {
+    if (position.size() < 2) 
+      return false;
+    return floats_equal(_lat, position[0]) and floats_equal(_lon, position[1]);
   }
   Position& operator+=(const Vector& vector); 
   Position& operator-=(const Vector& vector) {
     return *this += -vector;
   }
   Vector operator-(const Position& position) const;
+  Vector operator-(const Simple& position) const;
   Position operator+(const Vector& vector) const {
     Position result(*this);
     result += vector;
