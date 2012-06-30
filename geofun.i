@@ -4,6 +4,12 @@
 %include "exception.i"
 %include "std_string.i"
 
+/* Deal with null references in equality operator */
+%feature("pythonprepend") operator== %{
+    if args[0] is None:
+        return False
+%}
+
 %{
 #include "geofun.hpp"
 
@@ -87,12 +93,13 @@
 %extend geofun::Coord {
   char* __str__() {
     static char temp[64];
-    sprintf(temp, "%.4f, %.4f", $self->x(), self->y());
+    sprintf(temp, "%.4f, %.4f", geofun::m_to_nm($self->x()), 
+                                geofun::m_to_nm($self->y()));
     return &temp[0];
   }
   char* __repr__() {
     static char temp[64];
-    sprintf(temp, "Coord(%f, %f)", $self->x(), self->y());
+    sprintf(temp, "Coord(%f, %f)", $self->x(), $self->y());
     return &temp[0];
   }
 }
@@ -100,12 +107,13 @@
 %extend geofun::Vector {
   char* __str__() {
     static char temp[64];
-    sprintf(temp, "%.2f, %.2f", $self->a(), self->r());
+    sprintf(temp, "%.2f, %.2f", geofun::rad_to_deg($self->a()), 
+                                geofun::m_to_nm($self->r()));
     return &temp[0];
   }
   char* __repr__() {
     static char temp[64];
-    sprintf(temp, "Vector(%f, %f)", $self->a(), self->r());
+    sprintf(temp, "Vector(%f, %f)", $self->a(), $self->r());
     return &temp[0];
   }
 }
@@ -113,12 +121,13 @@
 %extend geofun::Position {
   char* __str__() {
     static char temp[64];
-    sprintf(temp, "%.5f, %.5f", $self->lat(), self->lon());
+    sprintf(temp, "%.5f, %.5f", geofun::rad_to_deg($self->lat()), 
+                                geofun::rad_to_deg($self->lon()));
     return &temp[0];
   }
   char* __repr__() {
     static char temp[64];
-    sprintf(temp, "Position(%f, %f)", $self->lat(), self->lon());
+    sprintf(temp, "Position(%f, %f)", $self->lat(), $self->lon());
     return &temp[0];
   }
 }
@@ -127,10 +136,10 @@
   char* __str__() {
     static char temp[64];
     sprintf(temp, "%.5f, %.5f - %.5f, %.5f", 
-        $self->p1().lat(),
-        $self->p1().lon(),
-        $self->p2().lat(),
-        $self->p2().lon());
+        geofun::rad_to_deg($self->p1().lat()),
+        geofun::rad_to_deg($self->p1().lon()),
+        geofun::rad_to_deg($self->p2().lat()),
+        geofun::rad_to_deg($self->p2().lon()));
     return &temp[0];
   }
   char* __repr__() {
@@ -144,6 +153,8 @@
   }
 }
 
+
+/* Turn some C++ getters and setters into python properties */
 %pythoncode %{
 def set_property(clss, name):
     getter = getattr(clss, "_get_" + name)
