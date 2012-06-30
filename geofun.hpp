@@ -30,6 +30,16 @@ inline double rad_to_deg(const double rads)
   return rads * 180 / pi;
 }
 
+inline double m_to_nm(const double meters)
+{
+  return meters / 1852;
+}
+
+inline double nm_to_m(const double miles)
+{
+  return miles * 1852;
+}
+
 inline double sqr(const double x)
 {
   return x * x;
