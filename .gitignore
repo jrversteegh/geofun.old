@@ -3,3 +3,6 @@ geofun_wrap.cpp
 geofun_wrap.cxx
 test.py
 build
+geofun.pyc
+test_geofun
+geofun.o
