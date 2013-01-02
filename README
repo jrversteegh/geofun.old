@@ -1,0 +1,5 @@
+Python module for geodesic calculations
+=======================================
+
+The module is mostly written in C++ and requires
+SWIG for compilation.
