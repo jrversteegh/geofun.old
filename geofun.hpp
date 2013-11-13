@@ -373,7 +373,7 @@ struct WGS84: EarthModel {
   }
 };
 
-extern EarthModel* earth_model;
+extern EarthModel* get_earth_model();
 extern void set_earth_model(const std::string& model_name);
 
 struct Position: Simple {
@@ -453,7 +453,7 @@ struct Position: Simple {
     lat(latitude);
   }
   Coord cartesian_deltas(void) const {
-    return earth_model->cartesian_deltas(lat());
+    return get_earth_model()->cartesian_deltas(lat());
   }
   int compare(const Simple& position) const {
     if (_lat < position[0])

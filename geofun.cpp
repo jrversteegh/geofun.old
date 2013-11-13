@@ -11,7 +11,7 @@ char IndexError::msg[64];
 static WGS84 wgs84;
 static Sphere sphere;
 
-EarthModel* earth_model = &wgs84;
+static EarthModel* earth_model = &wgs84;
 
 void set_earth_model(const std::string& model_name)
 {
@@ -24,6 +24,11 @@ void set_earth_model(const std::string& model_name)
   else {
     throw EarthModelError();
   }
+}
+
+EarthModel* get_earth_model()
+{
+  return earth_model;
 }
 
 Position& Position::operator+=(const Vector& vector)
