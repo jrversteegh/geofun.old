@@ -1,6 +1,9 @@
 geofun.py
 geofun_wrap.cpp
 geofun_wrap.cxx
+geofun_wrap.o
+_geofun.so
+libgeofun.a
 test.py
 build
 geofun.pyc
