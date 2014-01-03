@@ -1,5 +1,8 @@
-PYTHON_INCLUDES = `python-config --includes`
-PYTHON_LIBS = `python-config --libs`
+PYTHON_EXECUTABLE ?= python
+PYTHON_CONFIG ?= $(PYTHON_EXECUTABLE)-config
+PREFIX ?= /usr/local
+PYTHON_INCLUDES = `$(PYTHON_CONFIG) --includes`
+PYTHON_LIBS = `$(PYTHON_CONFIG) --libs`
 CXX = g++
 AR = ar crvs
 RANLIB = ranlib
@@ -27,8 +30,9 @@ module: $(GEOFUN_OBJ) geofun.i
 
 install: $(GEOFUN_OBJ) geofun.i setup.py
 	@swig -c++ -python geofun.i
-	@python2.7 setup.py build
-	@sudo python2.7 setup.py install
+	@$(PYTHON_EXECUTABLE) setup.py build
+	@sudo $(PYTHON_EXECUTABLE) setup.py install
+	@cp -a $(GEOFUN_LIB) $(PREFIX)/lib
 
 
 .PHONY: clean all
