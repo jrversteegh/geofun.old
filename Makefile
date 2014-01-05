@@ -9,6 +9,7 @@ RANLIB = ranlib
 CXXFLAGS = -O2 -fPIC -fno-stack-protector
 GEOFUN_OBJ = geofun.o
 GEOFUN_LIB = libgeofun.a
+GEOFUN_INC = geofun.hpp
 
 all: $(GEOFUN_OBJ) $(GEOFUN_LIB) module
 	
@@ -33,6 +34,7 @@ install: $(GEOFUN_OBJ) geofun.i setup.py
 	@$(PYTHON_EXECUTABLE) setup.py build
 	@sudo $(PYTHON_EXECUTABLE) setup.py install
 	@cp -a $(GEOFUN_LIB) $(PREFIX)/lib
+	@cp -a $(GEOFUN_INC) $(PREFIX)/include
 
 
 .PHONY: clean all
