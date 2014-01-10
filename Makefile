@@ -11,7 +11,7 @@ GEOFUN_OBJ = geofun.o
 GEOFUN_LIB = libgeofun.a
 GEOFUN_INC = geofun.hpp
 
-all: $(GEOFUN_OBJ) $(GEOFUN_LIB) module
+all: $(GEOFUN_OBJ) $(GEOFUN_LIB) build
 	
 $(GEOFUN_OBJ): geofun.cpp geofun.hpp
 	@$(CXX) -c $(CXXFLAGS) -o $(GEOFUN_OBJ) geofun.cpp
@@ -29,10 +29,12 @@ module: $(GEOFUN_OBJ) geofun.i
 	@g++ -c $(CXXFLAGS) ${PYTHON_INCLUDES} geofun_wrap.cxx 
 	@g++ -shared geofun_wrap.o $(GEOFUN_OBJ) -o _geofun.so
 
-install: $(GEOFUN_OBJ) geofun.i setup.py
+build: $(GEOFUN_OBJ) geofun.i setup.py
 	@swig -c++ -python geofun.i
 	@$(PYTHON_EXECUTABLE) setup.py build
-	@sudo $(PYTHON_EXECUTABLE) setup.py install
+
+install: 
+	@$(PYTHON_EXECUTABLE) setup.py install
 	@cp -a $(GEOFUN_LIB) $(PREFIX)/lib
 	@cp -a $(GEOFUN_INC) $(PREFIX)/include
 

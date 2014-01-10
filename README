@@ -3,3 +3,7 @@ Python module for geodesic calculations
 
 The module is mostly written in C++ and requires
 SWIG for compilation.
+
+Install using:
+make
+PREFIX=/<destination> make install
