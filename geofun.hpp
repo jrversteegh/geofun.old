@@ -128,6 +128,7 @@ struct EarthModelError {
   
 
 struct Simple {
+  virtual ~Simple() {}
   virtual double operator[](int i) const {
     throw IndexError(i);
   }
@@ -137,6 +138,7 @@ struct Simple {
 };
 
 struct Complex {
+  virtual ~Complex() {}
   virtual const Simple& operator[](int i) const = 0; 
   virtual int size() const {
     return 0;
@@ -209,16 +211,16 @@ struct Coord: Simple {
     return _x * coord._y - _y * coord._x;
   }
 
-  double x() const {
+  double get_x() const {
     return _x;
   }
-  double y() const {
+  double get_y() const {
     return _y;
   }
-  void x(const double value) {
+  void set_x(const double value) {
     _x = value;
   }
-  void y(const double value) {
+  void set_y(const double value) {
     _y = value;
   }
 private:
@@ -235,7 +237,7 @@ inline Coord operator*(const double value, const Coord& coord)
 
 inline Coord operator/(const double value, const Coord& coord)
 {
-  return Coord(value / coord.x(), value / coord.y());
+  return Coord(value / coord.get_x(), value / coord.get_y());
 }
 
 
@@ -244,8 +246,8 @@ struct Vector: Simple {
   Vector(const double angle, const double range): _a(angle), _r(range) {}
   Vector(const Vector& vector): _a(vector._a), _r(vector._r) {}
   Vector(const Coord& coord) {
-    _r = sqrt(sqr(coord.x()) + sqr(coord.y()));
-    _a = norm_angle_2pi(atan2(coord.y(), coord.x()));
+    _r = sqrt(sqr(coord.get_x()) + sqr(coord.get_y()));
+    _a = norm_angle_2pi(atan2(coord.get_y(), coord.get_x()));
   }
 
   Vector& operator=(const Vector& vector) {
@@ -267,11 +269,11 @@ struct Vector: Simple {
     return *this;
   }
   Vector& operator+=(const Vector& vector) {
-    cartesian(cartesian() + vector.cartesian());
+    set_cartesian(cartesian() + vector.cartesian());
     return *this;
   }
   Vector& operator-=(const Vector& vector) {
-    cartesian(cartesian() - vector.cartesian());
+    set_cartesian(cartesian() - vector.cartesian());
     return *this;
   }
   Vector operator*(const double value) const
@@ -316,9 +318,9 @@ struct Vector: Simple {
   Coord cartesian() const {
     return Coord(_r * cos(_a), _r * sin(_a));
   }
-  void cartesian(const Coord& coord) {
-    _r = hypot(coord.x(), coord.y());
-    _a = norm_angle_2pi(atan2(coord.y(), coord.x()));
+  void set_cartesian(const Coord& coord) {
+    _r = hypot(coord.get_x(), coord.get_y());
+    _a = norm_angle_2pi(atan2(coord.get_y(), coord.get_x()));
   }
   double dot(const Vector& vector) const {
     return _r * vector._r * cos(vector._a - _a);
@@ -326,16 +328,16 @@ struct Vector: Simple {
   double cross(const Vector& vector) const {
     return _r * vector._r * sin(vector._a - _a);
   }
-  double a() const {
+  double get_a() const {
     return _a;
   }
-  double r() const {
+  double get_r() const {
     return _r;
   }
-  void a(const double value) {
+  void set_a(const double value) {
     _a = norm_angle_2pi(value);
   }
-  void r(const double value) {
+  void set_r(const double value) {
     _r = value;
   }
 private:
@@ -352,6 +354,7 @@ inline Vector operator*(const double value, const Vector& vector)
 }
 
 struct EarthModel {
+  virtual ~EarthModel() {}
   virtual Coord cartesian_deltas(const double lat) {
     return Coord(1, 1);
   };
@@ -379,7 +382,7 @@ extern void set_earth_model(const std::string& model_name);
 struct Position: Simple {
   Position(): _lat(0), _lon(0) {}
   Position(const double latitude, const double longitude): _lat(0), _lon(0) {
-    latlon(latitude, longitude);
+    set_latlon(latitude, longitude);
   }
   Position(const Position& position): _lat(position._lat), _lon(position._lon) {}
   Position(const Simple& position): _lat(0), _lon(0) {
@@ -432,28 +435,28 @@ struct Position: Simple {
   virtual int size() const {
     return 2;
   }
-  double lat() const {
+  double get_lat() const {
     return _lat;
   }
-  double lon() const {
+  double get_lon() const {
     return _lon;
   }
-  void lat(const double value) {
+  void set_lat(const double value) {
     _lat = value;
     if (norm_angle_pi2pi2(&_lat)) {
-      lon(lon() + pi);
+      set_lon(get_lon() + pi);
     }
   }
-  void lon(const double value) {
+  void set_lon(const double value) {
     _lon = norm_angle_pipi(value);
   }
-  void latlon(const double latitude, const double longitude) {
+  void set_latlon(const double latitude, const double longitude) {
     // When doing it in this order flying over the pole should work
-    lon(longitude);
-    lat(latitude);
+    set_lon(longitude);
+    set_lat(latitude);
   }
   Coord cartesian_deltas(void) const {
-    return get_earth_model()->cartesian_deltas(lat());
+    return get_earth_model()->cartesian_deltas(get_lat());
   }
   int compare(const Simple& position) const {
     if (_lat < position[0])
@@ -496,39 +499,39 @@ struct Line: Complex {
   virtual int size() const {
     return 3;
   }
-  const Position& p1() const {
+  const Position& get_p1() const {
     return _p1;
   }
-  const Position& p2() const {
+  const Position& get_p2() const {
     return _p2;
   }
-  const Vector& v() const {
+  const Vector& get_v() const {
     return _v;
   }
-  void p1(const Position& position) {
+  void set_p1(const Position& position) {
     _p1 = position;
     _v = _p2 - _p1;
   }
-  void p2(const Position& position) {
+  void set_p2(const Position& position) {
     _p2 = position;
     _v = _p2 - _p1;
   }
-  void v(const Vector& vector) {
+  void set_v(const Vector& vector) {
     _p2 = _p1 + vector;
     // v will not be set exactly...
     _v = _p2 - _p1;
   }
   double min_lat() const {
-    return std::min(_p1.lat(), _p2.lat());
+    return std::min(_p1.get_lat(), _p2.get_lat());
   }
   double max_lat() const {
-    return std::max(_p1.lat(), _p2.lat());
+    return std::max(_p1.get_lat(), _p2.get_lat());
   }
   double min_lon() const {
-    return _v.a() <= pi ? _p1.lon() : _p2.lon();
+    return _v.get_a() <= pi ? _p1.get_lon() : _p2.get_lon();
   }
   double max_lon() const {
-    return _v.a() <= pi ? _p2.lon() : _p1.lon();
+    return _v.get_a() <= pi ? _p2.get_lon() : _p1.get_lon();
   }
   bool intersects(const Line& line) const;
   Position intersection(const Line& line) const;
@@ -559,7 +562,7 @@ struct Arc: Complex {
     Vector r;
     double alpha;
     vincenty_direct(_p2, vector, &p, &r, &alpha);
-    p2(p);
+    set_p2(p);
     return *this;
   }
   virtual const Simple& operator[](int i) const {
@@ -575,47 +578,47 @@ struct Arc: Complex {
     return 4;
   }
 
-  const Position& p1() const {
+  const Position& get_p1() const {
     return _p1;
   }
-  const Position& p2() const {
+  const Position& get_p2() const {
     return _p2;
   }
-  const Vector& v() const {
+  const Vector& get_v() const {
     return _v;
   }
-  const Vector& r() const {
+  const Vector& get_r() const {
     return _r;
   }
-  void p1(const Position& position) {
+  void set_p1(const Position& position) {
     _p1 = position;
     vincenty_inverse(_p1, _p2, &_v, &_r, &_alpha);
   }
-  void p2(const Position& position) {
+  void set_p2(const Position& position) {
     _p2 = position;
     vincenty_inverse(_p1, _p2, &_v, &_r, &_alpha);
   }
-  void v(const Vector& vector) {
+  void set_v(const Vector& vector) {
     _v = vector;
     vincenty_direct(_p1, vector, &_p2, &_r, &_alpha);
   }
-  void r(const Vector& vector) {
+  void set_r(const Vector& vector) {
     _r = vector;
     vincenty_direct(_p2, vector, &_p1, &_v, &_alpha);
   }
   double min_lat() const {
     // TODO
-    return std::min(_p1.lat(), _p2.lat());
+    return std::min(_p1.get_lat(), _p2.get_lat());
   }
   double max_lat() const {
     // TODO
-    return std::max(_p1.lat(), _p2.lat());
+    return std::max(_p1.get_lat(), _p2.get_lat());
   }
   double min_lon() const {
-    return std::min(_p1.lon(), _p1.lon());
+    return std::min(_p1.get_lon(), _p1.get_lon());
   }
   double max_lon() const {
-    return std::max(_p1.lon(), _p2.lon());
+    return std::max(_p1.get_lon(), _p2.get_lon());
   }
   bool intersects(const Line& line) const;
   Position intersection(const Line& line) const;

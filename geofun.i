@@ -21,28 +21,11 @@
 %rename (__assign__) *::operator=;
 %rename (__len__) *::size;
 %rename (__cmp__) *::compare;
-
-%rename (_get_lat) *::lat;
-%rename (_set_lat) *::lat(const double);
-%rename (_get_lon) *::lon;
-%rename (_set_lon) *::lon(const double);
-%rename (_get_a) *::a;
-%rename (_set_a) *::a(const double);
-%rename (_get_r) *::r;
-%rename (_set_r) *::r(const double);
-%rename (_get_x) *::x;
-%rename (_set_x) *::x(const double);
-%rename (_get_y) *::y;
-%rename (_set_y) *::y(const double);
-
-%rename (_get_p1) *::p1;
-%rename (_set_p1) *::p1(const Position&);
-%rename (_get_p2) *::p2;
-%rename (_set_p2) *::p2(const Position&);
-%rename (_get_v) *::v;
-%rename (_set_v) *::v(const Vector&);
-%rename (_get_r) *::r;
-%rename (_set_r) *::r(const Vector&);
+%rename (__lt__) *::operator<;
+%rename (__gt__) *::operator>;
+%rename (__eq__) *::operator==;
+%rename (__le__) *::operator<=;
+%rename (__ge__) *::operator>=;
 
 %exception *::operator[] {
   try {
@@ -93,13 +76,13 @@
 %extend geofun::Coord {
   char* __str__() {
     static char temp[64];
-    sprintf(temp, "%.4f, %.4f", geofun::m_to_nm($self->x()), 
-                                geofun::m_to_nm($self->y()));
+    sprintf(temp, "%.4f, %.4f", geofun::m_to_nm($self->get_x()), 
+                                geofun::m_to_nm($self->get_y()));
     return &temp[0];
   }
   char* __repr__() {
     static char temp[64];
-    sprintf(temp, "Coord(%f, %f)", $self->x(), $self->y());
+    sprintf(temp, "Coord(%f, %f)", $self->get_x(), $self->get_y());
     return &temp[0];
   }
 }
@@ -107,13 +90,13 @@
 %extend geofun::Vector {
   char* __str__() {
     static char temp[64];
-    sprintf(temp, "%.2f, %.2f", geofun::rad_to_deg($self->a()), 
-                                geofun::m_to_nm($self->r()));
+    sprintf(temp, "%.2f, %.2f", geofun::rad_to_deg($self->get_a()), 
+                                geofun::m_to_nm($self->get_r()));
     return &temp[0];
   }
   char* __repr__() {
     static char temp[64];
-    sprintf(temp, "Vector(%f, %f)", $self->a(), $self->r());
+    sprintf(temp, "Vector(%f, %f)", $self->get_a(), $self->get_r());
     return &temp[0];
   }
 }
@@ -121,13 +104,13 @@
 %extend geofun::Position {
   char* __str__() {
     static char temp[64];
-    sprintf(temp, "%.5f, %.5f", geofun::rad_to_deg($self->lat()), 
-                                geofun::rad_to_deg($self->lon()));
+    sprintf(temp, "%.5f, %.5f", geofun::rad_to_deg($self->get_lat()), 
+                                geofun::rad_to_deg($self->get_lon()));
     return &temp[0];
   }
   char* __repr__() {
     static char temp[64];
-    sprintf(temp, "Position(%f, %f)", $self->lat(), $self->lon());
+    sprintf(temp, "Position(%f, %f)", $self->get_lat(), $self->get_lon());
     return &temp[0];
   }
 }
@@ -136,19 +119,19 @@
   char* __str__() {
     static char temp[64];
     sprintf(temp, "%.5f, %.5f - %.5f, %.5f", 
-        geofun::rad_to_deg($self->p1().lat()),
-        geofun::rad_to_deg($self->p1().lon()),
-        geofun::rad_to_deg($self->p2().lat()),
-        geofun::rad_to_deg($self->p2().lon()));
+        geofun::rad_to_deg($self->get_p1().get_lat()),
+        geofun::rad_to_deg($self->get_p1().get_lon()),
+        geofun::rad_to_deg($self->get_p2().get_lat()),
+        geofun::rad_to_deg($self->get_p2().get_lon()));
     return &temp[0];
   }
   char* __repr__() {
     static char temp[128];
     sprintf(temp, "Line(Position(%f, %f), Position(%f, %f))", 
-        $self->p1().lat(),
-        $self->p1().lon(),
-        $self->p2().lat(),
-        $self->p2().lon());
+        $self->get_p1().get_lat(),
+        $self->get_p1().get_lon(),
+        $self->get_p2().get_lat(),
+        $self->get_p2().get_lon());
     return &temp[0];
   }
 }
@@ -157,8 +140,8 @@
 /* Turn some C++ getters and setters into python properties */
 %pythoncode %{
 def set_property(clss, name):
-    getter = getattr(clss, "_get_" + name)
-    setter = getattr(clss, "_set_" + name)
+    getter = getattr(clss, "get_" + name)
+    setter = getattr(clss, "set_" + name)
     clss.__swig_getmethods__[name] = getter
     clss.__swig_setmethods__[name] = setter
     setattr(clss, name, _swig_property(getter, setter))
