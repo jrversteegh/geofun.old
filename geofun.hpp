@@ -50,7 +50,7 @@ inline double reduced_latitude(const double geodetic_latitude)
   return atan2((1 - f) * sin(geodetic_latitude), cos(geodetic_latitude));
 }
 
-inline double norm_angle_pipi(const double angle)
+inline double angle_pipi(const double angle)
 {
   double result = angle;
   while (result < -pi) {
@@ -62,7 +62,7 @@ inline double norm_angle_pipi(const double angle)
   return result;
 }
 
-inline double norm_angle_2pi(const double angle)
+inline double angle_2pi(const double angle)
 {
   double result = angle;
   while (result < 0) {
@@ -74,9 +74,9 @@ inline double norm_angle_2pi(const double angle)
   return result;
 }
 
-inline bool norm_angle_pi2pi2(double* angle)
+inline bool angle_pi2pi2(double* angle)
 {
-  *angle = norm_angle_pipi(*angle);
+  *angle = angle_pipi(*angle);
 
   if (*angle > half_pi) {
     *angle = pi - *angle;
@@ -93,7 +93,7 @@ inline bool norm_angle_pi2pi2(double* angle)
 
 inline double angle_diff(const double angle1, const double angle2) 
 {
-  return norm_angle_pipi(angle1 - angle2);
+  return angle_pipi(angle1 - angle2);
 }
 
 inline bool floats_equal(const double value1, const double value2)
@@ -247,7 +247,7 @@ struct Vector: Simple {
   Vector(const Vector& vector): _a(vector._a), _r(vector._r) {}
   Vector(const Coord& coord) {
     _r = sqrt(sqr(coord.get_x()) + sqr(coord.get_y()));
-    _a = norm_angle_2pi(atan2(coord.get_y(), coord.get_x()));
+    _a = angle_2pi(atan2(coord.get_y(), coord.get_x()));
   }
 
   Vector& operator=(const Vector& vector) {
@@ -257,7 +257,7 @@ struct Vector: Simple {
   }
   Vector operator-() const {
     Vector v(*this);
-    v._a = norm_angle_2pi(_a + pi);
+    v._a = angle_2pi(_a + pi);
     return v;
   }
   bool operator==(const Vector& vector) const {
@@ -320,7 +320,7 @@ struct Vector: Simple {
   }
   void set_cartesian(const Coord& coord) {
     _r = hypot(coord.get_x(), coord.get_y());
-    _a = norm_angle_2pi(atan2(coord.get_y(), coord.get_x()));
+    _a = angle_2pi(atan2(coord.get_y(), coord.get_x()));
   }
   double dot(const Vector& vector) const {
     return _r * vector._r * cos(vector._a - _a);
@@ -335,7 +335,7 @@ struct Vector: Simple {
     return _r;
   }
   void set_a(const double value) {
-    _a = norm_angle_2pi(value);
+    _a = angle_2pi(value);
   }
   void set_r(const double value) {
     _r = value;
@@ -443,12 +443,12 @@ struct Position: Simple {
   }
   void set_lat(const double value) {
     _lat = value;
-    if (norm_angle_pi2pi2(&_lat)) {
+    if (angle_pi2pi2(&_lat)) {
       set_lon(get_lon() + pi);
     }
   }
   void set_lon(const double value) {
-    _lon = norm_angle_pipi(value);
+    _lon = angle_pipi(value);
   }
   void set_latlon(const double latitude, const double longitude) {
     // When doing it in this order flying over the pole should work
