@@ -438,18 +438,18 @@ struct Position: Simple {
       default: throw IndexError(i);
     }
   }
-  bool operator<(const Simple& position) {
+  bool operator<(const Simple& position) const {
     return float_smaller(_lat, position[0])
       or (floats_equal(_lat, position[0]) and float_smaller(_lon, position[1]));
   }
-  bool operator<=(const Simple& position) {
+  bool operator<=(const Simple& position) const {
     return not operator>(position);
   }
-  bool operator>(const Simple& position) {
+  bool operator>(const Simple& position) const {
     return float_smaller(position[0], _lat)
       or (floats_equal(position[0], _lat) and float_smaller(position[1], _lon));
   }
-  bool operator>=(const Simple& position) {
+  bool operator>=(const Simple& position) const {
     return not operator<(position);
   }
   int compare(const Simple& position) const {
