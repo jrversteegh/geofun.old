@@ -101,11 +101,17 @@ inline bool floats_equal(const double value1, const double value2)
   double abs1 = fabs(value1);
   double abs2 = fabs(value2);
   double absmax = std::max(abs1, abs2);
-  double eps = 1E-12;
-  if (absmax > 1) {
+  double eps = 1E-13;
+  // Get relative eps value except for values very close to zero
+  if (absmax > 1E-6) {
     eps *= absmax;
   }
   return fabs(value1 - value2) < eps;
+}
+
+inline bool float_smaller(const double value1, const double value2)
+{
+  return value1 < value2 and not floats_equal(value1, value2);
 }
 
 struct IndexError {
@@ -432,6 +438,33 @@ struct Position: Simple {
       default: throw IndexError(i);
     }
   }
+  bool operator<(const Simple& position) {
+    return float_smaller(_lat, position[0])
+      or (floats_equal(_lat, position[0]) and float_smaller(_lon, position[1]));
+  }
+  bool operator<=(const Simple& position) {
+    return not operator>(position);
+  }
+  bool operator>(const Simple& position) {
+    return float_smaller(position[0], _lat)
+      or (floats_equal(position[0], _lat) and float_smaller(position[1], _lon));
+  }
+  bool operator>=(const Simple& position) {
+    return not operator<(position);
+  }
+  int compare(const Simple& position) const {
+    if (_lat < position[0])
+      return -1;
+    else if (_lat > position[0])
+      return 1;
+    else if (_lon < position[1])
+      return -1;
+    else if (_lon > position[1])
+      return 1;
+    else
+      return 0;
+  }
+
   virtual int size() const {
     return 2;
   }
@@ -457,18 +490,6 @@ struct Position: Simple {
   }
   Coord cartesian_deltas(void) const {
     return get_earth_model()->cartesian_deltas(get_lat());
-  }
-  int compare(const Simple& position) const {
-    if (_lat < position[0])
-      return -1;
-    else if (_lat > position[0])
-      return 1;
-    else if (_lon < position[1])
-      return -1;
-    else if (_lon > position[1])
-      return 1;
-    else
-      return 0;
   }
 private:
   double _lat;
