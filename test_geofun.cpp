@@ -12,18 +12,18 @@ using namespace std;
 
 class VectorPositionTest : public CppUnit::TestFixture {
   void testNormAngle() {
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(3.14, norm_angle_pipi(3.14), 1E-12);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(6.28 - two_pi, norm_angle_pipi(6.28), 1E-12);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(6.28, norm_angle_2pi(6.28), 1E-12);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(two_pi - 2, norm_angle_2pi(-2), 1E-12);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(3.14, angle_pipi(3.14), 1E-12);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(6.28 - two_pi, angle_pipi(6.28), 1E-12);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(6.28, angle_2pi(6.28), 1E-12);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(two_pi - 2, angle_2pi(-2), 1E-12);
     double angle = 3;
-    CPPUNIT_ASSERT(norm_angle_pi2pi2(&angle));
+    CPPUNIT_ASSERT(angle_pi2pi2(&angle));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(pi - 3, angle, 1E-12);
     angle = 1;
-    CPPUNIT_ASSERT(!norm_angle_pi2pi2(&angle));
+    CPPUNIT_ASSERT(!angle_pi2pi2(&angle));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(1, angle, 1E-12);
     angle = -2;
-    CPPUNIT_ASSERT(norm_angle_pi2pi2(&angle));
+    CPPUNIT_ASSERT(angle_pi2pi2(&angle));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(2 - pi, angle, 1E-12);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0, angle_diff(-pi, pi - 1E-13), 1E-12);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0, angle_diff(pi - 1E-13, -pi), 1E-12);
