@@ -21,6 +21,9 @@ void set_earth_model(const std::string& model_name)
   else if (model_name == "spherical") {
     earth_model = &sphere;
   }
+  else if (model_name == "sphere") {
+    earth_model = &sphere;
+  }
   else {
     throw EarthModelError();
   }
