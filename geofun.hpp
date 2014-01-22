@@ -346,6 +346,19 @@ struct Vector: Simple {
   void set_r(const double value) {
     _r = value;
   }
+  // Aliases for a and r
+  double get_length() const {
+    return _r;
+  }
+  void set_length(const double value) {
+    _r = value;
+  }
+  double get_angle() const {
+    return _a;
+  }
+  void set_angle(const double value) {
+    _a = angle_2pi(value);
+  }
 private:
   double _a;
   double _r;
@@ -468,6 +481,7 @@ struct Position: Simple {
   virtual int size() const {
     return 2;
   }
+
   double get_lat() const {
     return _lat;
   }
@@ -483,6 +497,24 @@ struct Position: Simple {
   void set_lon(const double value) {
     _lon = angle_pipi(value);
   }
+
+  // Aliases for lat and lon
+  double get_latitude() const {
+    return _lat;
+  }
+  void set_latitude(const double value) {
+    _lat = value;
+    if (angle_pi2pi2(&_lat)) {
+      set_lon(get_lon() + pi);
+    }
+  }
+  double get_longitude() const {
+    return _lon;
+  }
+  void set_longitude(const double value) {
+    _lon = angle_pipi(value);
+  }
+
   void set_latlon(const double latitude, const double longitude) {
     // When doing it in this order flying over the pole should work
     set_lon(longitude);
