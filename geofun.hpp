@@ -372,6 +372,11 @@ inline Vector operator*(const double value, const Vector& vector)
   return result;
 }
 
+inline double operator*(const Vector& v1, const Vector& v2)
+{
+  return v1.dot(v2);
+}
+
 struct EarthModel {
   virtual ~EarthModel() {}
   virtual Coord cartesian_deltas(const double lat) {
@@ -496,6 +501,18 @@ struct Position: Simple {
   }
   void set_lon(const double value) {
     _lon = angle_pipi(value);
+  }
+  double get_lat_degs() const {
+    return rad_to_deg(get_lat());
+  }
+  double get_lon_degs() const {
+    return rad_to_deg(get_lon());
+  }
+  void set_lat_degs(const double value) {
+    set_lat(deg_to_rad(value));
+  }
+  void set_lon_degs(const double value) {
+    set_lon(deg_to_rad(value));
   }
 
   // Aliases for lat and lon
