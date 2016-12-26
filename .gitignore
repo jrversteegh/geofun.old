@@ -9,3 +9,6 @@ geofun.pyc
 test_geofun
 geofun.o
 /.project
+/__pycache__
+/_geofun.cpython-35m-x86_64-linux-gnu.so
+/geofun.egg-info/
