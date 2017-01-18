@@ -114,6 +114,7 @@ inline bool float_smaller(const double value1, const double value2)
   return value1 < value2 and not floats_equal(value1, value2);
 }
 
+
 struct IndexError {
   IndexError(const int i): _i(i) {}
   const char* what() const throw() {
@@ -132,6 +133,12 @@ struct EarthModelError {
   }
 };
   
+struct AngleModeError {
+  AngleModeError() {} 
+  const char* what() const throw() {
+    return "Unknown angle mode. Available are: \"radians\", \"degrees\"";
+  }
+};
 
 struct Simple {
   virtual ~Simple() {}
@@ -246,6 +253,68 @@ inline Coord operator/(const double value, const Coord& coord)
   return Coord(value / coord.get_x(), value / coord.get_y());
 }
 
+struct EarthModel {
+  virtual ~EarthModel() {}
+  virtual Coord cartesian_deltas(const double lat) {
+    return Coord(1, 1);
+  };
+};
+
+struct Sphere: EarthModel {
+  virtual Coord cartesian_deltas(const double lat) {
+    return Coord(r, r * cos(lat));
+  }
+};
+
+struct WGS84: EarthModel {
+  virtual Coord cartesian_deltas(const double lat) {
+    double rl = reduced_latitude(lat);
+    return Coord(
+        a * b * sqrt(sqa * sqr(sin(rl)) + sqb * sqr(cos(rl))) 
+            / ((sqa - sqb) * sqr(cos(lat)) + sqb),
+        a * cos(rl));
+  }
+};
+
+
+extern EarthModel* get_earth_model();
+extern void set_earth_model(const std::string& model_name);
+extern void set_angle_mode(const std::string& angle_mode);
+typedef enum {am_radians, am_degrees} AngleMode;
+extern AngleMode angle_mode;
+
+inline double from_rads(const double value)
+{
+  if (angle_mode == am_radians)
+    return value;
+  else
+    return value * 180 / pi;
+}
+
+inline double to_rads(const double value)
+{
+  if (angle_mode == am_radians)
+    return value;
+  else
+    return value * pi / 180;
+}
+
+inline double to_degs(const double value)
+{
+  if (angle_mode == am_degrees)
+    return value;
+  else
+    return value * 180 / pi;
+}
+
+inline double from_degs(const double value)
+{
+  if (angle_mode == am_degrees)
+    return value;
+  else
+    return value * pi / 180;
+}
+
 
 struct Vector: Simple {
   Vector(): _a(0), _r(0) {}
@@ -334,31 +403,20 @@ struct Vector: Simple {
   double cross(const Vector& vector) const {
     return _r * vector._r * sin(vector._a - _a);
   }
-  double get_a() const {
-    return _a;
-  }
   double get_r() const {
     return _r;
-  }
-  void set_a(const double value) {
-    _a = angle_2pi(value);
   }
   void set_r(const double value) {
     _r = value;
   }
-  // Aliases for a and r
-  double get_length() const {
-    return _r;
+  double get_a() const {
+    return from_rads(_a);
   }
-  void set_length(const double value) {
-    _r = value;
+  void set_a(const double value) {
+    _a = angle_2pi(to_rads(value));
   }
-  double get_angle() const {
-    return _a;
-  }
-  void set_angle(const double value) {
-    _a = angle_2pi(value);
-  }
+  friend class Line;
+  friend class Arc;
 private:
   double _a;
   double _r;
@@ -377,31 +435,6 @@ inline double operator*(const Vector& v1, const Vector& v2)
   return v1.dot(v2);
 }
 
-struct EarthModel {
-  virtual ~EarthModel() {}
-  virtual Coord cartesian_deltas(const double lat) {
-    return Coord(1, 1);
-  };
-};
-
-struct Sphere: EarthModel {
-  virtual Coord cartesian_deltas(const double lat) {
-    return Coord(r, r * cos(lat));
-  }
-};
-
-struct WGS84: EarthModel {
-  virtual Coord cartesian_deltas(const double lat) {
-    double rl = reduced_latitude(lat);
-    return Coord(
-        a * b * sqrt(sqa * sqr(sin(rl)) + sqb * sqr(cos(rl))) 
-            / ((sqa - sqb) * sqr(cos(lat)) + sqb),
-        a * cos(rl));
-  }
-};
-
-extern EarthModel* get_earth_model();
-extern void set_earth_model(const std::string& model_name);
 
 struct Position: Simple {
   Position(): _lat(0), _lon(0) {}
@@ -488,49 +521,21 @@ struct Position: Simple {
   }
 
   double get_lat() const {
-    return _lat;
+    return from_rads(_lat);
   }
   double get_lon() const {
-    return _lon;
+    return from_rads(_lon);
   }
   void set_lat(const double value) {
-    _lat = value;
+    _lat = to_rads(value);
     if (angle_pi2pi2(&_lat)) {
-      set_lon(get_lon() + pi);
+      _lon = angle_pipi(_lon + pi);
     }
   }
   void set_lon(const double value) {
-    _lon = angle_pipi(value);
-  }
-  double get_lat_degs() const {
-    return rad_to_deg(get_lat());
-  }
-  double get_lon_degs() const {
-    return rad_to_deg(get_lon());
-  }
-  void set_lat_degs(const double value) {
-    set_lat(deg_to_rad(value));
-  }
-  void set_lon_degs(const double value) {
-    set_lon(deg_to_rad(value));
+    _lon = angle_pipi(to_rads(value));
   }
 
-  // Aliases for lat and lon
-  double get_latitude() const {
-    return _lat;
-  }
-  void set_latitude(const double value) {
-    _lat = value;
-    if (angle_pi2pi2(&_lat)) {
-      set_lon(get_lon() + pi);
-    }
-  }
-  double get_longitude() const {
-    return _lon;
-  }
-  void set_longitude(const double value) {
-    _lon = angle_pipi(value);
-  }
 
   void set_latlon(const double latitude, const double longitude) {
     // When doing it in this order flying over the pole should work
@@ -538,9 +543,11 @@ struct Position: Simple {
     set_lat(latitude);
   }
   Coord cartesian_deltas(void) const {
-    return get_earth_model()->cartesian_deltas(get_lat());
+    return get_earth_model()->cartesian_deltas(_lat);
   }
 private:
+  friend class Line;
+  friend class Arc;
   double _lat;
   double _lon;
 };
@@ -598,10 +605,13 @@ struct Line: Complex {
     return std::max(_p1.get_lat(), _p2.get_lat());
   }
   double min_lon() const {
-    return _v.get_a() <= pi ? _p1.get_lon() : _p2.get_lon();
+    return _v._a <= pi ? _p1.get_lon() : _p2.get_lon();
   }
   double max_lon() const {
-    return _v.get_a() <= pi ? _p2.get_lon() : _p1.get_lon();
+    return _v._a <= pi ? _p2.get_lon() : _p1.get_lon();
+  }
+  double get_length() const {
+    return _v.get_r();
   }
   bool intersects(const Line& line) const;
   Position intersection(const Line& line) const;

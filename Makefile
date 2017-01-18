@@ -21,7 +21,7 @@ $(GEOFUN_LIB): $(GEOFUN_OBJ)
 	@$(RANLIB) $(GEOFUN_LIB)
 
 test: test_geofun.cpp geofun.cpp geofun.hpp
-	@$(CXX) -o test_geofun -lcppunit test_geofun.cpp geofun.cpp
+	@$(CXX) -o test_geofun -lcppunit -ldl test_geofun.cpp geofun.cpp
 	@./test_geofun
 
 module: $(GEOFUN_OBJ) geofun.i
@@ -48,5 +48,6 @@ clean:
 	rm -f *.pyc
 	rm -f geofun.py
 	rm -f _geofun.so
+	rm -rf geofun.egg-info
 	rm -f $(GEOFUN_LIB)
 

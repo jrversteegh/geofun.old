@@ -90,7 +90,7 @@
 %extend geofun::Vector {
   char* __str__() {
     static char temp[64];
-    sprintf(temp, "%.2f, %.2f", geofun::rad_to_deg($self->get_a()), 
+    sprintf(temp, "%.2f, %.2f", geofun::rad_to_deg(geofun::to_rads($self->get_a())), 
                                 geofun::m_to_nm($self->get_r()));
     return &temp[0];
   }
@@ -104,8 +104,8 @@
 %extend geofun::Position {
   char* __str__() {
     static char temp[64];
-    sprintf(temp, "%.5f, %.5f", geofun::rad_to_deg($self->get_lat()), 
-                                geofun::rad_to_deg($self->get_lon()));
+    sprintf(temp, "%.5f, %.5f", geofun::rad_to_deg(geofun::to_rads($self->get_lat())), 
+                                geofun::rad_to_deg(geofun::to_rads($self->get_lon())));
     return &temp[0];
   }
   char* __repr__() {
@@ -119,10 +119,10 @@
   char* __str__() {
     static char temp[64];
     sprintf(temp, "%.5f, %.5f - %.5f, %.5f", 
-        geofun::rad_to_deg($self->get_p1().get_lat()),
-        geofun::rad_to_deg($self->get_p1().get_lon()),
-        geofun::rad_to_deg($self->get_p2().get_lat()),
-        geofun::rad_to_deg($self->get_p2().get_lon()));
+        geofun::rad_to_deg(geofun::to_rads($self->get_p1().get_lat())),
+        geofun::rad_to_deg(geofun::to_rads($self->get_p1().get_lon())),
+        geofun::rad_to_deg(geofun::to_rads($self->get_p2().get_lat())),
+        geofun::rad_to_deg(geofun::to_rads($self->get_p2().get_lon())));
     return &temp[0];
   }
   char* __repr__() {
@@ -152,8 +152,6 @@ set_property(Vector, 'a')
 set_property(Vector, 'r')
 set_property(Position, 'lat')
 set_property(Position, 'lon')
-set_property(Position, 'lat_degs')
-set_property(Position, 'lon_degs')
 set_property(Line, 'p1')
 set_property(Line, 'p2')
 set_property(Line, 'v')

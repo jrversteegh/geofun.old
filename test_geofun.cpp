@@ -40,11 +40,11 @@ class VectorPositionTest : public CppUnit::TestFixture {
       p3 += v2;
     }
     Vector diff = p3 - p2;
-    CPPUNIT_ASSERT(diff.r() < 20);
+    CPPUNIT_ASSERT(diff.get_r() < 20);
     Position p4 = p1 + v1;
     diff = p4 - p2;
     // Within 30 meters after more than 800 miles. Not bad.
-    CPPUNIT_ASSERT(diff.r() < 30);
+    CPPUNIT_ASSERT(diff.get_r() < 30);
     // Make sure horizontal and vertical movements work
     Position p5(0.8, 0.8);
     Position p6(0.8, 1.0);
@@ -56,9 +56,9 @@ class VectorPositionTest : public CppUnit::TestFixture {
     p8 += v3;
     p9 += v4;
     diff = p8 - p6;
-    CPPUNIT_ASSERT(diff.r() < 20);
+    CPPUNIT_ASSERT(diff.get_r() < 20);
     diff = p9 - p7;
-    CPPUNIT_ASSERT(diff.r() < 20);
+    CPPUNIT_ASSERT(diff.get_r() < 20);
   }
   void testDivisionByZero() {
     // This test verifies handling of division by zero required by the
@@ -97,7 +97,7 @@ class LineTest : public CppUnit::TestFixture {
     Line l2(Position(0.8, 0.8), Position(1.0, 1.0));
     Position x1 = l1.intersection(l2);
     Position x2 = l2.intersection(l1);
-    double r = (x1 - x2).r();
+    double r = (x1 - x2).get_r();
     CPPUNIT_ASSERT(r < 30);
     Line l3(Position(0.8, 0.78), Position(1.0, 1.01));
     Position x3 = l2.intersection(l3);
@@ -109,13 +109,29 @@ class LineTest : public CppUnit::TestFixture {
     Position x4 = l4.intersection(l5);
     Position x5 = l4.intersection(l6);
     Position x6 = l4.intersection(l7);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(pi - 0.05, x4.lon(), 1E-5);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(pi, x5.lon(), 1E-5);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(-pi, x6.lon(), 1E-5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(pi - 0.05, x4.get_lon(), 1E-5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(pi, x5.get_lon(), 1E-5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-pi, x6.get_lon(), 1E-5);
+  }
+  void testLength() {
+    Line l1(Position(1.0, 0.9), Position(0.9, 1.0));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(737866.68517, l1.get_length(), 1E-5);
+    set_angle_mode("degrees");
+    try {
+      Line l2(Position(rad_to_deg(1.0), rad_to_deg(0.9)), Position(rad_to_deg(0.9), rad_to_deg(1.0)));
+      CPPUNIT_ASSERT_DOUBLES_EQUAL(737866.68517, l2.get_length(), 1E-5);
+      set_angle_mode("radians");
+      CPPUNIT_ASSERT_DOUBLES_EQUAL(737866.68517, l2.get_length(), 1E-5);
+    }
+    catch(...) {
+      set_angle_mode("radians");
+      throw;
+    }
   }
 public:
   CPPUNIT_TEST_SUITE(LineTest);
   CPPUNIT_TEST(testIntersection);
+  CPPUNIT_TEST(testLength);
   CPPUNIT_TEST_SUITE_END();
 };
 
@@ -126,13 +142,13 @@ class ArcTest : public CppUnit::TestFixture {
     Arc arc1(p1, p2);
     Line line1(p1, p2);
 
-    CPPUNIT_ASSERT(arc1.v().r() < line1.v().r());
-    Arc arc2(p1, arc1.v());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, arc2.p2().lat(), 1E-6);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, arc2.p2().lon(), 1E-6);
-    Vector d = arc1.p2() - p2;
+    CPPUNIT_ASSERT(arc1.get_v().get_r() < line1.get_v().get_r());
+    Arc arc2(p1, arc1.get_v());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, arc2.get_p2().get_lat(), 1E-6);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, arc2.get_p2().get_lon(), 1E-6);
+    Vector d = arc1.get_p2() - p2;
 
-    CPPUNIT_ASSERT(d.r() < 10);
+    CPPUNIT_ASSERT(d.get_r() < 10);
   }
 public:
   CPPUNIT_TEST_SUITE(ArcTest);

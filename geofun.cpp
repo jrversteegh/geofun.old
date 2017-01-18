@@ -11,7 +11,9 @@ char IndexError::msg[64];
 static WGS84 wgs84;
 static Sphere sphere;
 
+
 static EarthModel* earth_model = &wgs84;
+AngleMode angle_mode = am_radians;
 
 void set_earth_model(const std::string& model_name)
 {
@@ -29,6 +31,19 @@ void set_earth_model(const std::string& model_name)
   }
 }
 
+void set_angle_mode(const std::string& mode_name)
+{
+  if (mode_name == "radians") {
+    angle_mode = am_radians;
+  }
+  else if (mode_name == "degrees") {
+    angle_mode = am_degrees;
+  }
+  else {
+    throw AngleModeError();
+  }
+}
+
 EarthModel* get_earth_model()
 {
   return earth_model;
@@ -40,31 +55,31 @@ Position& Position::operator+=(const Vector& vector)
   Coord cart = vector.cartesian();
   Position mid_pos;
   mid_pos.set_latlon(
-      get_lat() + 0.5 * cart.get_x() / deltas1.get_x(),
-      get_lon() + 0.5 * cart.get_y() / deltas1.get_y());
+      _lat + 0.5 * cart.get_x() / deltas1.get_x(),
+      _lon + 0.5 * cart.get_y() / deltas1.get_y());
   Coord deltas2 = mid_pos.cartesian_deltas();
   mid_pos.set_latlon(
-      get_lat() + cart.get_x() / (deltas1.get_x() + deltas2.get_x()),
-      get_lon() + cart.get_y() / (deltas1.get_y() + deltas2.get_y()));
+      _lat + cart.get_x() / (deltas1.get_x() + deltas2.get_x()),
+      _lon + cart.get_y() / (deltas1.get_y() + deltas2.get_y()));
   deltas2 = mid_pos.cartesian_deltas();
   Position end_pos;
   end_pos.set_latlon(
-      get_lat() + cart.get_x() / deltas2.get_x(),
-      get_lon() + cart.get_y() / deltas2.get_y());
+      _lat + cart.get_x() / deltas2.get_x(),
+      _lon + cart.get_y() / deltas2.get_y());
   Coord deltas3 = end_pos.cartesian_deltas();
   Coord inv_deltas = (1.0 / 6) * (1 / deltas1 + 4 / deltas2 + 1 / deltas3);
-  set_latlon(get_lat() + cart.get_x() * inv_deltas.get_x(), get_lon() + cart.get_y() * inv_deltas.get_y());
+  set_latlon(_lat + cart.get_x() * inv_deltas.get_x(), _lon + cart.get_y() * inv_deltas.get_y());
   return *this;
 }
 
 Vector Position::operator-(const Position& position) const
 {
-  double dlat = angle_diff(this->get_lat(), position.get_lat());
-  double dlon = angle_diff(this->get_lon(), position.get_lon());
+  double dlat = angle_diff(this->_lat, position._lat);
+  double dlon = angle_diff(this->_lon, position._lon);
   Coord deltas1 = position.cartesian_deltas();
   Coord deltas3 = this->cartesian_deltas();
   Position mid_lat;
-  mid_lat.set_lat(0.5 * (this->get_lat() + position[0]));
+  mid_lat.set_lat(from_rads(0.5 * (this->_lat + position._lat)));
   Coord deltas2 = mid_lat.cartesian_deltas();
   Coord deltas = 6.0 / (1.0 / deltas1 + 4.0 / deltas2 + 1.0 / deltas3);
   Coord cart = Coord(dlat  * deltas.get_x(), dlon  * deltas.get_y());
@@ -88,11 +103,11 @@ bool Line::intersects(const Line& line) const {
   Vector v12 = line._p2 - _p1;
   Vector v21 = _p1 - line._p1;
   Vector v22 = _p2 - line._p1;
-  double da1 = angle_diff(v11.get_a(), _v.get_a());
-  double da2 = angle_diff(v12.get_a(), _v.get_a());
+  double da1 = angle_diff(v11._a, _v._a);
+  double da2 = angle_diff(v12._a, _v._a);
   if ((da1 > 0 and da2 < 0) or (da1 < 0 and da2 > 0)) {
-    double da3 = angle_diff(v21.get_a(), line._v.get_a());
-    double da4 = angle_diff(v22.get_a(), line._v.get_a());
+    double da3 = angle_diff(v21._a, line._v._a);
+    double da4 = angle_diff(v22._a, line._v._a);
     if ((da3 > 0 and da4 < 0) or (da3 < 0 and da4 > 0)) {
       return true;
     }
@@ -102,19 +117,19 @@ bool Line::intersects(const Line& line) const {
 
 Position Line::intersection(const Line& line) const {
   if (!intersects(line)) {
-    return Position(-pi, 0);
+    return Position(from_rads(-pi), 0);
   }
   
   Position p(_p1);
   double l;
   do {
     Vector v = line._p1 - p;
-    double a1 = fabs(angle_diff(line._v.get_a(), _v.get_a()));
-    double a2 = fabs(angle_diff(_v.get_a(), v.get_a()));
+    double a1 = fabs(angle_diff(line._v._a, _v._a));
+    double a2 = fabs(angle_diff(_v._a, v._a));
     double a3 = pi - a2 - a1;
-    double d = sin(a3) * v.get_r();
+    double d = sin(a3) * v._r;
     l = d / sin(a1);
-    double f = l / _v.get_r();
+    double f = l / _v._r;
     p += _v * f;
   } while (fabs(l) > 10);
 
@@ -124,9 +139,9 @@ Position Line::intersection(const Line& line) const {
 void Arc::vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Vector* r, double* alpha)
 {
   // Formula obtained from http://en.wikipedia.org/wiki/Vincenty%27s_formulae
-  double u1 = reduced_latitude(p1.get_lat());
-  double u2 = reduced_latitude(p2.get_lat());
-  double dlinit = p2.get_lon() - p1.get_lon();
+  double u1 = reduced_latitude(p1._lat);
+  double u2 = reduced_latitude(p2._lat);
+  double dlinit = p2._lon - p1._lon;
 
   double sinu1 = sin(u1);
   double cosu1 = cos(u1);
@@ -176,7 +191,7 @@ void Arc::vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Ve
   double dsig = bb * sins * (cos2sm + 0.25 * bb * (coss2sqcos2smm1 - 
       (1.0 / 6) * bb * cos2sm * (-3 + 4 * sqr(sins)) * (-3 + 4 * sqcos2sm)));
   v->set_r(b * aa * (sig - dsig));
-  r->set_r(v->get_r());
+  r->set_r(v->_r);
   v->set_a(atan2(cosu2 * sindl, cosu1sinu2 - sinu1cosu2 * cosdl));
   r->set_a(pi - atan2(cosu1 * sindl, -sinu1cosu2 + cosu1sinu2 * cosdl));
   *alpha = asin(sina);
@@ -184,20 +199,20 @@ void Arc::vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Ve
 
 void Arc::vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vector* r, double* alpha)
 {
-  double u1 = reduced_latitude(p1.get_lat());
-  double cosa1 = cos(v.get_a());
-  double sina1 = sin(v.get_a());
+  double u1 = reduced_latitude(p1._lat);
+  double cosa1 = cos(v._a);
+  double sina1 = sin(v._a);
   double sig1 = atan2(tan(u1), cosa1);
   double cosu1 = cos(u1);
   double sinu1 = sin(u1);
-  double sina = cosu1 * sin(v.get_a());
+  double sina = cosu1 * sin(v._a);
   double sqcosa = (1 - sina) * (1 + sina);
   double squ = sqcosa * (sqa - sqb) / sqb;
   double sqrtsqup1 = sqrt(1 + squ);
   double k1 = (sqrtsqup1 - 1) / (sqrtsqup1 + 1);
   double aa = (1 + 0.25 * sqr(k1)) / (1 - k1);
   double bb = k1 * (1 - (3.0 / 8) * sqr(k1));
-  double siginit = v.get_r() / (b * aa);
+  double siginit = v._r / (b * aa);
   double sig = siginit;
 
   double sins, coss;
@@ -224,9 +239,9 @@ void Arc::vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vec
   double dlinit = dl 
       - (1 - c) * f * sina * (sig + c * sins * (cos2sm + c * coss2sqcos2smm1));
   r->set_a(pi - atan2(sina, -sinu1 * sins + cosu1 * coss * cosa1));
-  r->set_r(v.get_r());
+  r->set_r(v._r);
   p2->set_lat(f2);
-  p2->set_lon(p1.get_lon() + dlinit);
+  p2->set_lon(p1._lon + dlinit);
   *alpha = asin(sina);
 }
 
@@ -238,7 +253,7 @@ bool Arc::intersects(const Line& line) const
 
 Position Arc::intersection(const Line& line) const
 {
-  return Position(pi, 0);
+  return Position(from_rads(pi), 0);
 }
 
 bool Arc::intersects(const Arc& arc) const
@@ -249,7 +264,7 @@ bool Arc::intersects(const Arc& arc) const
 
 Position Arc::intersection(const Arc& arc) const
 {
-  return Position(-pi, 0);
+  return Position(from_rads(-pi), 0);
 }
 
 }  // namespace geofun
