@@ -54,21 +54,21 @@ Position& Position::operator+=(const Vector& vector)
   Coord deltas1 = cartesian_deltas();
   Coord cart = vector.cartesian();
   Position mid_pos;
-  mid_pos.set_latlon(
+  mid_pos._set_latlon(
       _lat + 0.5 * cart.get_x() / deltas1.get_x(),
       _lon + 0.5 * cart.get_y() / deltas1.get_y());
   Coord deltas2 = mid_pos.cartesian_deltas();
-  mid_pos.set_latlon(
+  mid_pos._set_latlon(
       _lat + cart.get_x() / (deltas1.get_x() + deltas2.get_x()),
       _lon + cart.get_y() / (deltas1.get_y() + deltas2.get_y()));
   deltas2 = mid_pos.cartesian_deltas();
   Position end_pos;
-  end_pos.set_latlon(
+  end_pos._set_latlon(
       _lat + cart.get_x() / deltas2.get_x(),
       _lon + cart.get_y() / deltas2.get_y());
   Coord deltas3 = end_pos.cartesian_deltas();
   Coord inv_deltas = (1.0 / 6) * (1 / deltas1 + 4 / deltas2 + 1 / deltas3);
-  set_latlon(_lat + cart.get_x() * inv_deltas.get_x(), _lon + cart.get_y() * inv_deltas.get_y());
+  _set_latlon(_lat + cart.get_x() * inv_deltas.get_x(), _lon + cart.get_y() * inv_deltas.get_y());
   return *this;
 }
 
@@ -190,10 +190,10 @@ void Arc::vincenty_inverse(const Position& p1, const Position& p2, Vector* v, Ve
     
   double dsig = bb * sins * (cos2sm + 0.25 * bb * (coss2sqcos2smm1 - 
       (1.0 / 6) * bb * cos2sm * (-3 + 4 * sqr(sins)) * (-3 + 4 * sqcos2sm)));
-  v->set_r(b * aa * (sig - dsig));
-  r->set_r(v->_r);
-  v->set_a(atan2(cosu2 * sindl, cosu1sinu2 - sinu1cosu2 * cosdl));
-  r->set_a(pi - atan2(cosu1 * sindl, -sinu1cosu2 + cosu1sinu2 * cosdl));
+  v->_set_r(b * aa * (sig - dsig));
+  r->_set_r(v->_r);
+  v->_set_a(atan2(cosu2 * sindl, cosu1sinu2 - sinu1cosu2 * cosdl));
+  r->_set_a(pi - atan2(cosu1 * sindl, -sinu1cosu2 + cosu1sinu2 * cosdl));
   *alpha = asin(sina);
 }
 
@@ -238,10 +238,10 @@ void Arc::vincenty_direct(const Position& p1, const Vector& v, Position* p2, Vec
   double c = f / 16 * sqcosa * (4 + f * (4 - 3 * sqcosa));
   double dlinit = dl 
       - (1 - c) * f * sina * (sig + c * sins * (cos2sm + c * coss2sqcos2smm1));
-  r->set_a(pi - atan2(sina, -sinu1 * sins + cosu1 * coss * cosa1));
-  r->set_r(v._r);
-  p2->set_lat(f2);
-  p2->set_lon(p1._lon + dlinit);
+  r->_set_a(pi - atan2(sina, -sinu1 * sins + cosu1 * coss * cosa1));
+  r->_set_r(v._r);
+  p2->_set_lat(f2);
+  p2->_set_lon(p1._lon + dlinit);
   *alpha = asin(sina);
 }
 

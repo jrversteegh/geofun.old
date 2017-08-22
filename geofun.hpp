@@ -318,7 +318,7 @@ inline double from_degs(const double value)
 
 struct Vector: Simple {
   Vector(): _a(0), _r(0) {}
-  Vector(const double angle, const double range): _a(angle), _r(range) {}
+  Vector(const double angle, const double range): _a(angle_2pi(to_rads(angle))), _r(range) {}
   Vector(const Vector& vector): _a(vector._a), _r(vector._r) {}
   Vector(const Coord& coord) {
     _r = sqrt(sqr(coord.get_x()) + sqr(coord.get_y()));
@@ -369,7 +369,7 @@ struct Vector: Simple {
   }
   virtual double operator[](int i) const {
     switch (i) {
-      case 0: return _a;
+      case 0: return from_rads(_a);
       case 1: return _r;
       default: throw IndexError(i);
     }
@@ -404,22 +404,35 @@ struct Vector: Simple {
     return _r * vector._r * sin(vector._a - _a);
   }
   double get_r() const {
-    return _r;
+    return _get_r();
   }
   void set_r(const double value) {
-    _r = value;
+    _set_r(value);
   }
   double get_a() const {
-    return from_rads(_a);
+    return from_rads(_get_a());
   }
   void set_a(const double value) {
-    _a = angle_2pi(to_rads(value));
+    _set_a(to_rads(value));
   }
   friend class Line;
   friend class Arc;
 private:
   double _a;
   double _r;
+  double _get_r() const {
+    return _r;
+  }
+  void _set_r(const double value) {
+    _r = value;
+  }
+  double _get_a() const {
+    return _a;
+  }
+  void _set_a(const double value) {
+    _a = angle_2pi(value);
+  }
+
 };
 
 
@@ -484,8 +497,8 @@ struct Position: Simple {
 
   virtual double operator[](int i) const {
     switch (i) {
-      case 0: return _lat;
-      case 1: return _lon;
+      case 0: return from_rads(_lat);
+      case 1: return from_rads(_lon);
       default: throw IndexError(i);
     }
   }
@@ -527,15 +540,11 @@ struct Position: Simple {
     return from_rads(_lon);
   }
   void set_lat(const double value) {
-    _lat = to_rads(value);
-    if (angle_pi2pi2(&_lat)) {
-      _lon = angle_pipi(_lon + pi);
-    }
+    _set_lat(to_rads(value));
   }
   void set_lon(const double value) {
-    _lon = angle_pipi(to_rads(value));
+    _set_lon(to_rads(value));
   }
-
 
   void set_latlon(const double latitude, const double longitude) {
     // When doing it in this order flying over the pole should work
@@ -550,6 +559,21 @@ private:
   friend class Arc;
   double _lat;
   double _lon;
+  void _set_lon(const double value) {
+    _lon = angle_pipi(value);
+  }
+
+  void _set_lat(const double value) {
+    _lat = value;
+    if (angle_pi2pi2(&_lat)) {
+      _lon = angle_pipi(_lon + pi);
+    }
+  }
+  void _set_latlon(const double latitude, const double longitude) {
+    // When doing it in this order flying over the pole should work
+    _set_lon(longitude);
+    _set_lat(latitude);
+  }
 };
 
 struct Line: Complex {
