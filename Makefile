@@ -34,7 +34,8 @@ build: $(GEOFUN_OBJ) geofun.i setup.py
 	@$(PYTHON_EXECUTABLE) setup.py build
 
 install: 
-	@$(PYTHON_EXECUTABLE) setup.py install
+	@mkdir -p $(PREFIX)/include
+	@mkdir -p $(PREFIX)/lib
 	@cp -a $(GEOFUN_LIB) $(PREFIX)/lib
 	@cp -a $(GEOFUN_INC) $(PREFIX)/include
 
