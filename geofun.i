@@ -142,9 +142,7 @@
 def set_property(clss, name):
     getter = getattr(clss, "get_" + name)
     setter = getattr(clss, "set_" + name)
-    clss.__swig_getmethods__[name] = getter
-    clss.__swig_setmethods__[name] = setter
-    setattr(clss, name, _swig_property(getter, setter))
+    setattr(clss, name, property(getter, setter))
 
 set_property(Coord, 'x')
 set_property(Coord, 'y')
